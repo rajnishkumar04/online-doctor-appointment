@@ -1,0 +1,2487 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MedBook Pro - Doctor Appointment System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'Outfit', sans-serif;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    }
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide-in {
+      animation: slideIn 0.4s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    .token-badge {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+    }
+    .status-pending {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    }
+    .status-accepted {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+    .status-declined {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full gradient-bg text-white overflow-auto">
+  <div id="app" class="min-h-full w-full"><!-- Navigation -->
+   <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="nav-clinic-name" class="text-xl font-bold text-white">MedBook Pro</h1>
+        <p id="nav-tagline" class="text-xs text-slate-400">Healthcare Excellence</p>
+       </div>
+      </div>
+      <div class="flex gap-2"><button onclick="showView('customer')" id="nav-customer" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-500 text-white"> Customer Login </button> <button onclick="showView('doctor')" id="nav-doctor" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-slate-700 text-slate-300 hover:bg-slate-600"> Doctor Login </button> <button onclick="showView('patient')" id="nav-patient" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-slate-700 text-slate-300 hover:bg-slate-600"> Book Appointment </button> <button onclick="showView('admin')" id="nav-admin" class="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-slate-700 text-slate-300 hover:bg-slate-600"> Admin Panel </button>
+      </div>
+     </div>
+    </div>
+   </nav><!-- Customer View -->
+   <div id="customer-view" class="pt-24 pb-12 px-4">
+    <div class="max-w-4xl mx-auto"><!-- Login Form (shown when not logged in) -->
+     <div id="customer-login-form" class="glass-card rounded-2xl p-8 shadow-2xl slide-in">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold text-slate-800 mb-2">Customer Login</h2>
+       <p class="text-slate-500">Access your appointment dashboard with OTP</p>
+      </div><!-- Step 1: Choose Login Method -->
+      <div id="customer-login-method" class="space-y-4">
+       <div><label class="block text-sm font-medium text-slate-700 mb-3">Choose Login Method</label>
+        <div class="grid grid-cols-2 gap-3"><button type="button" onclick="selectCustomerLoginMethod('email')" id="customer-email-method" class="p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 transition-all flex flex-col items-center gap-2">
+          <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg><span class="font-medium text-slate-800">Email OTP</span> </button> <button type="button" onclick="selectCustomerLoginMethod('mobile')" id="customer-mobile-method" class="p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-emerald-300 transition-all flex flex-col items-center gap-2">
+          <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg><span class="font-medium text-slate-800">Mobile OTP</span> </button>
+        </div>
+       </div><!-- Step 2: Enter Email/Mobile -->
+       <form id="customer-request-otp" class="space-y-4">
+        <div id="customer-email-input-group"><label class="block text-sm font-medium text-slate-700 mb-2">Email Address</label> <input type="email" id="customer-email-input" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="your@email.com">
+        </div>
+        <div id="customer-mobile-input-group" class="hidden"><label class="block text-sm font-medium text-slate-700 mb-2">Mobile Number</label> <input type="tel" id="customer-mobile-input" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="+1 234 567 8900">
+        </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+         </svg> Send OTP </button>
+       </form>
+       <p class="text-center text-slate-500 text-sm">Don't have an account? <button type="button" onclick="showCustomerRegister()" class="text-emerald-600 font-medium hover:text-emerald-700"> Register here </button></p>
+      </div><!-- Step 3: Verify OTP -->
+      <div id="customer-verify-otp" class="space-y-4 hidden">
+       <div class="text-center mb-4">
+        <p class="text-sm text-slate-600">OTP sent to</p>
+        <p id="customer-otp-sent-to" class="font-semibold text-slate-800"></p>
+       </div>
+       <form id="customer-otp-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-700 mb-2">Enter 6-Digit OTP</label>
+         <div class="flex gap-2 justify-center"><input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"> <input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"> <input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"> <input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"> <input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"> <input type="text" maxlength="1" class="customer-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800">
+         </div>
+         <p class="text-xs text-slate-500 text-center mt-2">Demo OTP: <span class="font-mono font-bold text-emerald-600" id="customer-demo-otp">123456</span></p>
+        </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+         </svg> Verify &amp; Login </button> <button type="button" onclick="resendCustomerOTP()" class="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium"> Resend OTP </button> <button type="button" onclick="backToCustomerLogin()" class="w-full text-sm text-slate-500 hover:text-slate-700"> ← Back to login method </button>
+       </form>
+      </div>
+     </div><!-- Customer Registration Form -->
+     <div id="customer-register-form" class="glass-card rounded-2xl p-8 shadow-2xl slide-in hidden">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold text-slate-800 mb-2">Register New Customer</h2>
+       <p class="text-slate-500">Create your account to book appointments</p>
+      </div>
+      <form id="customer-register" class="space-y-4">
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Full Name</label> <input type="text" id="customer-reg-name" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="John Doe">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Email Address</label> <input type="email" id="customer-reg-email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="your@email.com">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Phone Number</label> <input type="tel" id="customer-reg-phone" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="+1 234 567 8900">
+       </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg> Create Account </button>
+       <p class="text-center text-slate-500 text-sm">Already have an account? <button type="button" onclick="showCustomerLogin()" class="text-emerald-600 font-medium hover:text-emerald-700"> Login here </button></p>
+      </form>
+     </div><!-- Customer Dashboard (shown when logged in) -->
+     <div id="customer-dashboard" class="hidden"><!-- Customer Profile Header -->
+      <div class="glass-card rounded-2xl p-6 shadow-2xl mb-6 slide-in">
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+         <div class="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-2xl text-white font-bold" id="customer-avatar">
+          A
+         </div>
+         <div>
+          <h2 class="text-2xl font-bold text-slate-800" id="customer-name">Customer Name</h2>
+          <p class="text-slate-500" id="customer-email">customer@email.com</p>
+         </div>
+        </div><button onclick="logoutCustomer()" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all flex items-center gap-2">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+         </svg> Logout </button>
+       </div>
+      </div><!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-slate-800" id="customer-stat-total">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Total Appointments
+        </div>
+       </div>
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-amber-500" id="customer-stat-pending">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Pending
+        </div>
+       </div>
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-emerald-500" id="customer-stat-upcoming">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Upcoming
+        </div>
+       </div>
+      </div><!-- Filter Tabs -->
+      <div class="flex gap-2 mb-6"><button onclick="filterCustomerAppointments('all')" class="customer-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500 text-white" data-filter="all"> All </button> <button onclick="filterCustomerAppointments('pending')" class="customer-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="pending"> Pending </button> <button onclick="filterCustomerAppointments('accepted')" class="customer-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="accepted"> Accepted </button> <button onclick="filterCustomerAppointments('declined')" class="customer-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="declined"> Declined </button>
+      </div><!-- Appointments -->
+      <div class="glass-card rounded-2xl p-6 shadow-2xl">
+       <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg> My Appointments</h3>
+       <div id="customer-appointments" class="space-y-4">
+        <p class="text-slate-500 text-center py-8">No appointments found.</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Doctor View -->
+   <div id="doctor-view" class="pt-24 pb-12 px-4 hidden">
+    <div class="max-w-4xl mx-auto"><!-- Login Form (shown when not logged in) -->
+     <div id="doctor-login-form" class="glass-card rounded-2xl p-8 shadow-2xl slide-in">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold text-slate-800 mb-2">Doctor Login</h2>
+       <p class="text-slate-500">Access your appointment dashboard with OTP</p>
+      </div><!-- Step 1: Select Doctor Profile -->
+      <div id="doctor-select-profile" class="space-y-4">
+       <form id="doctor-select-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-700 mb-2">Select Your Profile</label> <select id="doctor-select" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <option value="">Choose a doctor...</option> </select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-700 mb-3">Choose Verification Method</label>
+         <div class="grid grid-cols-2 gap-3"><button type="button" onclick="selectDoctorLoginMethod('email')" id="doctor-email-method" class="p-4 rounded-xl border-2 border-blue-500 bg-blue-50 transition-all flex flex-col items-center gap-2">
+           <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+           </svg><span class="font-medium text-slate-800">Email OTP</span> </button> <button type="button" onclick="selectDoctorLoginMethod('mobile')" id="doctor-mobile-method" class="p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-blue-300 transition-all flex flex-col items-center gap-2">
+           <svg class="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+           </svg><span class="font-medium text-slate-800">Mobile OTP</span> </button>
+         </div>
+        </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all flex items-center justify-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+         </svg> Send OTP </button>
+       </form>
+       <p class="text-center text-slate-500 text-sm">New doctor? <button type="button" onclick="showDoctorRegister()" class="text-blue-600 font-medium hover:text-blue-700"> Register here </button></p>
+      </div><!-- Step 2: Verify OTP -->
+      <div id="doctor-verify-otp" class="space-y-4 hidden">
+       <div class="text-center mb-4">
+        <p class="text-sm text-slate-600">OTP sent to</p>
+        <p id="doctor-otp-sent-to" class="font-semibold text-slate-800"></p>
+       </div>
+       <form id="doctor-otp-form" class="space-y-4">
+        <div><label class="block text-sm font-medium text-slate-700 mb-2">Enter 6-Digit OTP</label>
+         <div class="flex gap-2 justify-center"><input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <input type="text" maxlength="1" class="doctor-otp-digit w-12 h-14 text-center text-2xl font-bold rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800">
+         </div>
+         <p class="text-xs text-slate-500 text-center mt-2">Demo OTP: <span class="font-mono font-bold text-blue-600" id="doctor-demo-otp">123456</span></p>
+        </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all flex items-center justify-center gap-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+         </svg> Verify &amp; Login </button> <button type="button" onclick="resendDoctorOTP()" class="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"> Resend OTP </button> <button type="button" onclick="backToDoctorSelect()" class="w-full text-sm text-slate-500 hover:text-slate-700"> ← Back to profile selection </button>
+       </form>
+      </div>
+     </div><!-- Doctor Registration Form -->
+     <div id="doctor-register-form" class="glass-card rounded-2xl p-8 shadow-2xl slide-in hidden">
+      <div class="text-center mb-8">
+       <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+       </div>
+       <h2 class="text-3xl font-bold text-slate-800 mb-2">Register New Doctor</h2>
+       <p class="text-slate-500">Create your doctor profile</p>
+      </div>
+      <form id="doctor-register" class="space-y-4">
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Full Name</label> <input type="text" id="doctor-reg-name" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800" placeholder="Dr. John Smith">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Specialty</label> <select id="doctor-reg-specialty" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <option value="">Select specialty...</option> <option value="Cardiologist">❤️ Cardiologist</option> <option value="Dermatologist">🧴 Dermatologist</option> <option value="Neurologist">🧠 Neurologist</option> <option value="Orthopedic">🦴 Orthopedic</option> <option value="Pediatrician">��� Pediatrician</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Years of Experience</label> <input type="number" id="doctor-reg-experience" required min="1" max="50" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800" placeholder="10">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Hospital Affiliation</label> <select id="doctor-reg-hospital" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"> <option value="">Select hospital...</option> <option value="h1">🏥 City General Hospital</option> <option value="h2">❤️ Heart Care Medical Center</option> <option value="h3">👶 Children's Health Hospital</option> <option value="h4">🧠 NeuroScience Institute</option> <option value="h5">✨ Skin &amp; Beauty Clinic</option> <option value="h6">🦴 Orthopedic Excellence Center</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-slate-700 mb-2">Consultation Fee ($)</label> <input type="number" id="doctor-reg-fee" required min="50" max="500" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800" placeholder="150">
+       </div><button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg> Create Doctor Profile </button>
+       <p class="text-center text-slate-500 text-sm">Already have an account? <button type="button" onclick="showDoctorLogin()" class="text-blue-600 font-medium hover:text-blue-700"> Login here </button></p>
+      </form>
+     </div><!-- Doctor Dashboard (shown when logged in) -->
+     <div id="doctor-dashboard" class="hidden"><!-- Doctor Profile Header -->
+      <div class="glass-card rounded-2xl p-6 shadow-2xl mb-6 slide-in">
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+         <div class="text-5xl" id="doctor-avatar">
+          👨‍⚕️
+         </div>
+         <div>
+          <h2 class="text-2xl font-bold text-slate-800" id="doctor-name">Dr. Name</h2>
+          <p class="text-emerald-600 font-medium" id="doctor-specialty">Specialty</p>
+          <p class="text-sm text-slate-500" id="doctor-experience">Experience</p>
+          <p class="text-xs text-slate-600 flex items-center gap-1 mt-1" id="doctor-hospital"><span>🏥</span> <span>Hospital Name</span></p>
+         </div>
+        </div><button onclick="logoutDoctor()" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300 transition-all flex items-center gap-2">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+         </svg> Logout </button>
+       </div>
+      </div><!-- Stats -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-slate-800" id="doctor-stat-total">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Total Bookings
+        </div>
+       </div>
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-amber-500" id="doctor-stat-pending">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Pending
+        </div>
+       </div>
+       <div class="glass-card rounded-xl p-4">
+        <div class="text-3xl font-bold text-emerald-500" id="doctor-stat-today">
+         0
+        </div>
+        <div class="text-sm text-slate-500">
+         Today
+        </div>
+       </div>
+      </div><!-- Filter Tabs -->
+      <div class="flex gap-2 mb-6"><button onclick="filterDoctorAppointments('all')" class="doctor-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-white" data-filter="all"> All </button> <button onclick="filterDoctorAppointments('pending')" class="doctor-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="pending"> Pending </button> <button onclick="filterDoctorAppointments('accepted')" class="doctor-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="accepted"> Accepted </button> <button onclick="filterDoctorAppointments('declined')" class="doctor-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="declined"> Declined </button>
+      </div><!-- Appointments -->
+      <div class="glass-card rounded-2xl p-6 shadow-2xl">
+       <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg> My Appointments</h3>
+       <div id="doctor-appointments" class="space-y-4">
+        <p class="text-slate-500 text-center py-8">No appointments found.</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Patient View -->
+   <div id="patient-view" class="pt-24 pb-12 px-4 hidden">
+    <div class="max-w-6xl mx-auto"><!-- Hero Section -->
+     <div class="text-center mb-12 slide-in">
+      <h2 id="hero-title" class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Book Your Doctor Appointment</h2>
+      <p id="hero-subtitle" class="text-slate-400 text-lg max-w-2xl mx-auto">Select your specialist, choose a convenient time, and get your token instantly</p>
+     </div><!-- Booking Steps -->
+     <div class="flex items-center justify-center gap-4 mb-8">
+      <div id="step1-indicator" class="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium"><span class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">1</span> Select Doctor
+      </div>
+      <div class="w-8 h-0.5 bg-slate-600"></div>
+      <div id="step2-indicator" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-700 text-slate-400 text-sm font-medium"><span class="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center">2</span> Choose Time
+      </div>
+      <div class="w-8 h-0.5 bg-slate-600"></div>
+      <div id="step3-indicator" class="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-700 text-slate-400 text-sm font-medium"><span class="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center">3</span> Confirm
+      </div>
+     </div><!-- Step 1: Doctor Selection -->
+     <div id="step1" class="glass-card rounded-2xl p-6 shadow-2xl">
+      <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+       <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+       </svg> Choose Your Specialist</h3><!-- Hospital Filter -->
+      <div class="mb-6"><label class="block text-sm font-medium text-slate-700 mb-3">Select Hospital</label>
+       <div class="flex flex-wrap gap-2"><button onclick="filterByHospital('all')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-emerald-500 text-white" data-hospital="all"> All Hospitals </button> <button onclick="filterByHospital('h1')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h1"> 🏥 City General </button> <button onclick="filterByHospital('h2')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h2"> ❤️ Heart Care </button> <button onclick="filterByHospital('h3')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h3"> 👶 Children's Health </button> <button onclick="filterByHospital('h4')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h4"> 🧠 NeuroScience </button> <button onclick="filterByHospital('h5')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h5"> ✨ Skin &amp; Beauty </button> <button onclick="filterByHospital('h6')" class="hospital-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-hospital="h6"> ���������� Orthopedic Excellence </button>
+       </div>
+      </div><!-- Specialty Filter -->
+      <div class="mb-4"><label class="block text-sm font-medium text-slate-700 mb-3">Filter by Specialty</label>
+       <div class="flex flex-wrap gap-2"><button onclick="filterDoctors('all')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-emerald-500 text-white" data-filter="all"> All Specialists </button> <button onclick="filterDoctors('Cardiologist')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-filter="Cardiologist"> ❤️ Cardiology </button> <button onclick="filterDoctors('Dermatologist')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-filter="Dermatologist"> �� Dermatology </button> <button onclick="filterDoctors('Neurologist')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-filter="Neurologist"> 🧠 Neurology </button> <button onclick="filterDoctors('Orthopedic')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-filter="Orthopedic"> 🦴 Orthopedic </button> <button onclick="filterDoctors('Pediatrician')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-slate-200 text-slate-600 hover:bg-slate-300" data-filter="Pediatrician"> 👶 Pediatrics </button>
+       </div>
+      </div><!-- Doctor Cards -->
+      <div id="doctor-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"><!-- Doctors will be rendered here -->
+      </div>
+     </div><!-- Step 2: Time Scheduling -->
+     <div id="step2" class="glass-card rounded-2xl p-6 shadow-2xl mt-6 hidden">
+      <div class="flex items-center justify-between mb-6">
+       <h3 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg> Select Date &amp; Time</h3><button onclick="goToStep(1)" class="text-slate-500 hover:text-slate-700 flex items-center gap-1 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg> Back </button>
+      </div><!-- Selected Doctor Info -->
+      <div id="selected-doctor-info" class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 mb-6 border border-emerald-200"><!-- Will be populated -->
+      </div><!-- Date Selection -->
+      <div class="mb-6"><label class="block text-sm font-medium text-slate-700 mb-3">Select Date</label>
+       <div id="date-picker" class="flex gap-2 overflow-x-auto pb-2"><!-- Dates will be rendered -->
+       </div>
+      </div><!-- Time Slots -->
+      <div class="mb-6"><label class="block text-sm font-medium text-slate-700 mb-3">Available Time Slots</label>
+       <div id="time-slots" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2"><!-- Time slots will be rendered -->
+       </div>
+      </div><button onclick="goToStep(3)" id="proceed-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed" disabled> Proceed to Booking Details </button>
+     </div><!-- Step 3: Patient Details & Confirmation -->
+     <div id="step3" class="glass-card rounded-2xl p-6 shadow-2xl mt-6 hidden">
+      <div class="flex items-center justify-between mb-6">
+       <h3 class="text-xl font-semibold text-slate-800 flex items-center gap-2">
+        <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg> Confirm Your Appointment</h3><button onclick="goToStep(2)" class="text-slate-500 hover:text-slate-700 flex items-center gap-1 text-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg> Back </button>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6"><!-- Booking Summary -->
+       <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <h4 class="font-semibold text-slate-800 mb-4">Booking Summary</h4>
+        <div id="booking-summary" class="space-y-3"><!-- Will be populated -->
+        </div>
+       </div><!-- Patient Form -->
+       <div>
+        <h4 class="font-semibold text-slate-800 mb-4">Patient Information</h4>
+        <form id="patient-form" class="space-y-4">
+         <div><label class="block text-sm font-medium text-slate-700 mb-1">Full Name *</label> <input type="text" id="patient-name" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="Enter your full name">
+         </div>
+         <div><label class="block text-sm font-medium text-slate-700 mb-1">Email Address *</label> <input type="email" id="patient-email" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="your@email.com">
+         </div>
+         <div><label class="block text-sm font-medium text-slate-700 mb-1">Phone Number *</label> <input type="tel" id="patient-phone" required class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800" placeholder="+1 234 567 8900">
+         </div><button type="submit" id="confirm-booking-btn" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg> Confirm Booking </button>
+        </form>
+       </div>
+      </div>
+     </div><!-- Success Modal -->
+     <div id="success-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="glass-card rounded-2xl p-8 max-w-md w-full text-center slide-in">
+       <div class="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+        </svg>
+       </div>
+       <h3 class="text-2xl font-bold text-slate-800 mb-2">Booking Submitted!</h3>
+       <p class="text-slate-600 mb-4">Your appointment request has been sent successfully.</p>
+       <div id="token-display" class="bg-gradient-to-r from-amber-100 to-orange-100 rounded-xl p-4 mb-6 border border-amber-200"><!-- Token info -->
+       </div>
+       <p class="text-sm text-slate-500 mb-6">Please wait for the doctor to accept your appointment. You will be notified of the status.</p><button onclick="closeSuccessModal()" class="px-6 py-3 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition-all"> Done </button>
+      </div>
+     </div><!-- My Appointments Section -->
+     <div class="glass-card rounded-2xl p-6 shadow-2xl mt-8">
+      <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+       <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+       </svg> My Appointments</h3>
+      <div id="my-appointments" class="space-y-3">
+       <p class="text-slate-500 text-center py-8">No appointments yet. Book your first appointment above!</p>
+      </div>
+     </div>
+    </div>
+   </div><!-- Admin View -->
+   <div id="admin-view" class="pt-24 pb-12 px-4 hidden">
+    <div class="max-w-6xl mx-auto">
+     <div class="text-center mb-8 slide-in">
+      <h2 class="text-3xl font-bold mb-2 text-white">Admin Dashboard</h2>
+      <p class="text-slate-400">Manage appointment requests - Accept or Decline</p>
+     </div><!-- Stats Cards -->
+     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div class="glass-card rounded-xl p-4">
+       <div class="text-3xl font-bold text-slate-800" id="stat-total">
+        0
+       </div>
+       <div class="text-sm text-slate-500">
+        Total Requests
+       </div>
+      </div>
+      <div class="glass-card rounded-xl p-4">
+       <div class="text-3xl font-bold text-amber-500" id="stat-pending">
+        0
+       </div>
+       <div class="text-sm text-slate-500">
+        Pending
+       </div>
+      </div>
+      <div class="glass-card rounded-xl p-4">
+       <div class="text-3xl font-bold text-emerald-500" id="stat-accepted">
+        0
+       </div>
+       <div class="text-sm text-slate-500">
+        Accepted
+       </div>
+      </div>
+      <div class="glass-card rounded-xl p-4">
+       <div class="text-3xl font-bold text-red-500" id="stat-declined">
+        0
+       </div>
+       <div class="text-sm text-slate-500">
+        Declined
+       </div>
+      </div>
+     </div><!-- Filter Tabs -->
+     <div class="flex gap-2 mb-6"><button onclick="filterAppointments('all')" class="admin-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-emerald-500 text-white" data-filter="all"> All </button> <button onclick="filterAppointments('pending')" class="admin-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="pending"> Pending </button> <button onclick="filterAppointments('accepted')" class="admin-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="accepted"> Accepted </button> <button onclick="filterAppointments('declined')" class="admin-filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-slate-700 text-slate-300" data-filter="declined"> Declined </button>
+     </div><!-- Appointments List -->
+     <div class="glass-card rounded-2xl p-6 shadow-2xl mb-6">
+      <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+       <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+       </svg> Appointment Requests</h3>
+      <div id="admin-appointments" class="space-y-4">
+       <p class="text-slate-500 text-center py-8">No appointment requests yet.</p>
+      </div>
+     </div><!-- Login Records Section -->
+     <div class="glass-card rounded-2xl p-6 shadow-2xl">
+      <h3 class="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+       <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg> Login Activity Records</h3>
+      <div id="login-records" class="space-y-3">
+       <p class="text-slate-500 text-center py-8">No login records yet.</p>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Reference Data - Hospitals
+    const hospitals = [
+      { id: 'h1', name: 'City General Hospital', location: 'Downtown', type: 'Multi-Specialty', icon: '🏥' },
+      { id: 'h2', name: 'Heart Care Medical Center', location: 'North District', type: 'Cardiology Specialist', icon: '❤️' },
+      { id: 'h3', name: 'Children\'s Health Hospital', location: 'West Side', type: 'Pediatric Care', icon: '👶' },
+      { id: 'h4', name: 'NeuroScience Institute', location: 'Medical Park', type: 'Neurology & Psychology', icon: '🧠' },
+      { id: 'h5', name: 'Skin & Beauty Clinic', location: 'Central Plaza', type: 'Dermatology', icon: '✨' },
+      { id: 'h6', name: 'Orthopedic Excellence Center', location: 'East Avenue', type: 'Bone & Joint Care', icon: '🦴' }
+    ];
+
+    // Reference Data - Doctors (from CSV dataset - 281 doctors)
+    const doctors = [
+      { id: 'd1', name: 'Dr. Swati Yadav', specialty: 'Pediatrician', experience: '12 years', rating: 4.8, fee: 100, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd2', name: 'Dr. Kavita Deshpande', specialty: 'Dentist', experience: '10 years', rating: 4.7, fee: 90, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd3', name: 'Dr. Amit Deshpande', specialty: 'Oncologist', experience: '18 years', rating: 4.9, fee: 250, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd4', name: 'Dr. Ashok Mishra', specialty: 'Anesthesiologist', experience: '15 years', rating: 4.8, fee: 180, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd5', name: 'Dr. Vikram Mishra', specialty: 'Gastroenterologist', experience: '14 years', rating: 4.9, fee: 170, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd6', name: 'Dr. Meenal Arora', specialty: 'Radiologist', experience: '16 years', rating: 4.8, fee: 160, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd7', name: 'Dr. Kavita Saxena', specialty: 'Pulmonologist', experience: '13 years', rating: 4.7, fee: 165, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd8', name: 'Dr. Ritu Jain', specialty: 'Anesthesiologist', experience: '11 years', rating: 4.8, fee: 175, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd9', name: 'Dr. Meenal Saxena', specialty: 'Endocrinologist', experience: '17 years', rating: 4.9, fee: 190, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd10', name: 'Dr. Ashok Patel', specialty: 'Psychiatrist', experience: '19 years', rating: 4.8, fee: 200, avatar: '👨‍���️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd11', name: 'Dr. Neha Kulkarni', specialty: 'Nephrologist', experience: '14 years', rating: 4.9, fee: 185, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd12', name: 'Dr. Amit Iyer', specialty: 'Pediatrician', experience: '12 years', rating: 4.7, fee: 105, avatar: '👨‍⚕️', hospitalId: 'h3', available: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd13', name: 'Dr. Ritu Sharma', specialty: 'Radiologist', experience: '15 years', rating: 4.8, fee: 155, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:30', '10:30', '13:00', '14:30', '16:00'] },
+      { id: 'd14', name: 'Dr. Sandeep Kumar', specialty: 'Oncologist', experience: '20 years', rating: 4.9, fee: 260, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:30', '14:00', '15:30', '17:00'] },
+      { id: 'd15', name: 'Dr. Rohit Patel', specialty: 'Rheumatologist', experience: '13 years', rating: 4.7, fee: 170, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00'] },
+      { id: 'd16', name: 'Dr. Anil Kumar', specialty: 'Gynecologist', experience: '16 years', rating: 4.8, fee: 180, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '12:30', '14:30', '16:00'] },
+      { id: 'd17', name: 'Dr. Amit Mehta', specialty: 'Ophthalmologist', experience: '14 years', rating: 4.9, fee: 150, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '10:30', '13:00', '15:00', '16:30'] },
+      { id: 'd18', name: 'Dr. Deepak Iyer', specialty: 'Dentist', experience: '11 years', rating: 4.7, fee: 95, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd19', name: 'Dr. Nikhil Verma', specialty: 'Cardiologist', experience: '18 years', rating: 4.9, fee: 210, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:30', '10:00', '11:30', '13:30', '15:00', '16:30'] },
+      { id: 'd20', name: 'Dr. Anil Malhotra', specialty: 'Pediatrician', experience: '15 years', rating: 4.8, fee: 110, avatar: '👨‍⚕️', hospitalId: 'h3', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd21', name: 'Dr. Manish Jain', specialty: 'Rheumatologist', experience: '12 years', rating: 4.7, fee: 165, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd22', name: 'Dr. Rajesh Saxena', specialty: 'ENT Specialist', experience: '17 years', rating: 4.8, fee: 155, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd23', name: 'Dr. Meenal Kulkarni', specialty: 'General Physician', experience: '10 years', rating: 4.7, fee: 80, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd24', name: 'Dr. Sandeep Mehta', specialty: 'Endocrinologist', experience: '16 years', rating: 4.9, fee: 185, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd25', name: 'Dr. Vikram Arora', specialty: 'Cardiologist', experience: '19 years', rating: 4.9, fee: 220, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd26', name: 'Dr. Shalini Yadav', specialty: 'Dentist', experience: '9 years', rating: 4.6, fee: 85, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd27', name: 'Dr. Kavita Choudhary', specialty: 'Dentist', experience: '12 years', rating: 4.7, fee: 90, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd28', name: 'Dr. Nikhil Kumar', specialty: 'Gynecologist', experience: '14 years', rating: 4.8, fee: 175, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd29', name: 'Dr. Ashok Deshpande', specialty: 'Neurologist', experience: '21 years', rating: 4.9, fee: 230, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd30', name: 'Dr. Sandeep Sharma', specialty: 'Endocrinologist', experience: '15 years', rating: 4.8, fee: 180, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd31', name: 'Dr. Ashok Singh', specialty: 'Ophthalmologist', experience: '18 years', rating: 4.9, fee: 160, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd32', name: 'Dr. Manish Gupta', specialty: 'Pediatrician', experience: '13 years', rating: 4.8, fee: 108, avatar: '👨‍⚕️', hospitalId: 'h3', available: ['09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd33', name: 'Dr. Sunita Deshpande', specialty: 'Dermatologist', experience: '14 years', rating: 4.7, fee: 140, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['08:30', '10:30', '13:00', '14:30', '16:00'] },
+      { id: 'd34', name: 'Dr. Sunita Mehta', specialty: 'Orthopedic Surgeon', experience: '17 years', rating: 4.9, fee: 200, avatar: '��‍⚕️', hospitalId: 'h6', available: ['10:00', '11:30', '14:00', '15:30', '17:00'] },
+      { id: 'd35', name: 'Dr. Rohit Mehta', specialty: 'ENT Specialist', experience: '12 years', rating: 4.7, fee: 150, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00'] },
+      { id: 'd36', name: 'Dr. Ritu Kumar', specialty: 'Gynecologist', experience: '16 years', rating: 4.8, fee: 185, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '12:30', '14:30', '16:00'] },
+      { id: 'd37', name: 'Dr. Meenal Iyer', specialty: 'Dermatologist', experience: '11 years', rating: 4.8, fee: 135, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['08:30', '10:30', '13:00', '15:00', '16:30'] },
+      { id: 'd38', name: 'Dr. Amit Sharma', specialty: 'Psychiatrist', experience: '19 years', rating: 4.9, fee: 205, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd39', name: 'Dr. Neha Iyer', specialty: 'General Physician', experience: '8 years', rating: 4.6, fee: 75, avatar: '👩���⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00', '16:30'] },
+      { id: 'd40', name: 'Dr. Pradeep Malhotra', specialty: 'Anesthesiologist', experience: '20 years', rating: 4.9, fee: 3400, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd41', name: 'Dr. Anil Kumar', specialty: 'Ophthalmologist', experience: '15 years', rating: 4.8, fee: 2750, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd42', name: 'Dr. Pradeep Gupta', specialty: 'Neurologist', experience: '18 years', rating: 4.9, fee: 4100, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd43', name: 'Dr. Rohit Choudhary', specialty: 'Radiologist', experience: '14 years', rating: 4.7, fee: 2850, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd44', name: 'Dr. Vikram Arora', specialty: 'ENT Specialist', experience: '16 years', rating: 4.8, fee: 2950, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd45', name: 'Dr. Sandeep Gupta', specialty: 'Pulmonologist', experience: '13 years', rating: 4.8, fee: 2900, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd46', name: 'Dr. Rohit Choudhary', specialty: 'Psychiatrist', experience: '17 years', rating: 4.9, fee: 3650, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd47', name: 'Dr. Meenal Gupta', specialty: 'Gastroenterologist', experience: '15 years', rating: 4.8, fee: 3100, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd48', name: 'Dr. Sandeep Rao', specialty: 'Gynecologist', experience: '14 years', rating: 4.7, fee: 3050, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd49', name: 'Dr. Rohit Kumar', specialty: 'Gynecologist', experience: '12 years', rating: 4.8, fee: 2950, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd50', name: 'Dr. Neha Verma', specialty: 'Dermatologist', experience: '11 years', rating: 4.7, fee: 2350, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd51', name: 'Dr. Rakesh Mishra', specialty: 'Neurologist', experience: '19 years', rating: 4.9, fee: 4250, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd52', name: 'Dr. Rakesh Singh', specialty: 'Pediatrician', experience: '13 years', rating: 4.8, fee: 1350, avatar: '👨‍⚕️', hospitalId: 'h3', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd53', name: 'Dr. Manish Kumar', specialty: 'Gynecologist', experience: '15 years', rating: 4.8, fee: 3150, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd54', name: 'Dr. Amit Jain', specialty: 'Anesthesiologist', experience: '14 years', rating: 4.7, fee: 3150, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd55', name: 'Dr. Anil Gupta', specialty: 'Nephrologist', experience: '16 years', rating: 4.9, fee: 3350, avatar: '��‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd56', name: 'Dr. Kavita Arora', specialty: 'Ophthalmologist', experience: '13 years', rating: 4.8, fee: 2700, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd57', name: 'Dr. Anil Agarwal', specialty: 'Dermatologist', experience: '17 years', rating: 4.8, fee: 2650, avatar: '👨‍⚕️', hospitalId: 'h5', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd58', name: 'Dr. Amit Bansal', specialty: 'Nephrologist', experience: '15 years', rating: 4.9, fee: 3300, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd59', name: 'Dr. Amit Sharma', specialty: 'Rheumatologist', experience: '14 years', rating: 4.7, fee: 3000, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd60', name: 'Dr. Neha Kumar', specialty: 'Dermatologist', experience: '10 years', rating: 4.7, fee: 2250, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd61', name: 'Dr. Shalini Mehta', specialty: 'Pulmonologist', experience: '12 years', rating: 4.8, fee: 2850, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd62', name: 'Dr. Anil Gupta', specialty: 'Dermatologist', experience: '16 years', rating: 4.8, fee: 2600, avatar: '👨‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd63', name: 'Dr. Pradeep Kumar', specialty: 'Orthopedic Surgeon', experience: '18 years', rating: 4.9, fee: 3750, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd64', name: 'Dr. Rohit Arora', specialty: 'Rheumatologist', experience: '13 years', rating: 4.7, fee: 2950, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd65', name: 'Dr. Rohit Agarwal', specialty: 'General Physician', experience: '9 years', rating: 4.6, fee: 1050, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd66', name: 'Dr. Amit Verma', specialty: 'Gynecologist', experience: '15 years', rating: 4.8, fee: 3100, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd67', name: 'Dr. Deepak Kulkarni', specialty: 'Dermatologist', experience: '14 years', rating: 4.8, fee: 2500, avatar: '👨‍⚕️', hospitalId: 'h5', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd68', name: 'Dr. Rajesh Kumar', specialty: 'Ophthalmologist', experience: '17 years', rating: 4.9, fee: 2900, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd69', name: 'Dr. Neha Kulkarni', specialty: 'Radiologist', experience: '13 years', rating: 4.7, fee: 2800, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd70', name: 'Dr. Pradeep Deshpande', specialty: 'Anesthesiologist', experience: '19 years', rating: 4.9, fee: 3500, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd71', name: 'Dr. Nikhil Jain', specialty: 'Orthopedic Surgeon', experience: '16 years', rating: 4.8, fee: 3650, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd72', name: 'Dr. Rakesh Singh', specialty: 'Pulmonologist', experience: '14 years', rating: 4.8, fee: 2900, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd73', name: 'Dr. Sunita Verma', specialty: 'Endocrinologist', experience: '15 years', rating: 4.7, fee: 3250, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd74', name: 'Dr. Deepak Mehta', specialty: 'Endocrinologist', experience: '17 years', rating: 4.9, fee: 3400, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd75', name: 'Dr. Kavita Arora', specialty: 'Neurologist', experience: '18 years', rating: 4.9, fee: 4150, avatar: '👩‍⚕️', hospitalId: 'h4', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd76', name: 'Dr. Swati Rao', specialty: 'Ophthalmologist', experience: '12 years', rating: 4.7, fee: 2650, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd77', name: 'Dr. Nikhil Rao', specialty: 'Dermatologist', experience: '11 years', rating: 4.8, fee: 2400, avatar: '👨‍⚕️', hospitalId: 'h5', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd78', name: 'Dr. Vikram Mehta', specialty: 'Orthopedic Surgeon', experience: '19 years', rating: 4.9, fee: 3850, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd79', name: 'Dr. Manish Mehta', specialty: 'Urologist', experience: '16 years', rating: 4.8, fee: 3450, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd80', name: 'Dr. Pooja Arora', specialty: 'Gynecologist', experience: '13 years', rating: 4.7, fee: 3000, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd81', name: 'Dr. Rajesh Iyer', specialty: 'Cardiologist', experience: '20 years', rating: 4.9, fee: 4500, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd82', name: 'Dr. Sunita Kulkarni', specialty: 'Dermatologist', experience: '14 years', rating: 4.8, fee: 2700, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd83', name: 'Dr. Prakash Menon', specialty: 'Neurologist', experience: '18 years', rating: 4.9, fee: 4300, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd84', name: 'Dr. Lakshmi Nair', specialty: 'Pediatrician', experience: '12 years', rating: 4.7, fee: 1400, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd85', name: 'Dr. Ashish Pandey', specialty: 'Orthopedic', experience: '16 years', rating: 4.8, fee: 3700, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd86', name: 'Dr. Kavita Rao', specialty: 'Gynecologist', experience: '15 years', rating: 4.8, fee: 3200, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd87', name: 'Dr. Sanjay Desai', specialty: 'ENT Specialist', experience: '13 years', rating: 4.7, fee: 2800, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd88', name: 'Dr. Meena Joshi', specialty: 'Ophthalmologist', experience: '14 years', rating: 4.8, fee: 2750, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd89', name: 'Dr. Ramesh Kumar', specialty: 'Cardiologist', experience: '22 years', rating: 4.9, fee: 4700, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd90', name: 'Dr. Anita Sharma', specialty: 'Dermatologist', experience: '11 years', rating: 4.7, fee: 2400, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd91', name: 'Dr. Suresh Patel', specialty: 'Gastroenterologist', experience: '17 years', rating: 4.8, fee: 3300, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd92', name: 'Dr. Priya Gupta', specialty: 'Pediatrician', experience: '10 years', rating: 4.6, fee: 1200, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd93', name: 'Dr. Vinod Malhotra', specialty: 'Neurologist', experience: '19 years', rating: 4.9, fee: 4400, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd94', name: 'Dr. Shilpa Verma', specialty: 'Gynecologist', experience: '14 years', rating: 4.7, fee: 3100, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd95', name: 'Dr. Arun Singh', specialty: 'Orthopedic', experience: '18 years', rating: 4.9, fee: 3900, avatar: '👨��⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd96', name: 'Dr. Rekha Nair', specialty: 'Dermatologist', experience: '13 years', rating: 4.8, fee: 2600, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd97', name: 'Dr. Mohan Reddy', specialty: 'Cardiologist', experience: '21 years', rating: 4.9, fee: 4600, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd98', name: 'Dr. Sangita Iyer', specialty: 'Pediatrician', experience: '11 years', rating: 4.7, fee: 1300, avatar: '����‍⚕️', hospitalId: 'h3', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd99', name: 'Dr. Kiran Jain', specialty: 'ENT Specialist', experience: '15 years', rating: 4.8, fee: 2900, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd100', name: 'Dr. Nandini Kumar', specialty: 'Ophthalmologist', experience: '16 years', rating: 4.8, fee: 2850, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd101', name: 'Dr. Harish Mehta', specialty: 'Neurologist', experience: '20 years', rating: 4.9, fee: 4500, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd102', name: 'Dr. Poornima Rao', specialty: 'Gynecologist', experience: '12 years', rating: 4.7, fee: 2950, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd103', name: 'Dr. Satish Kulkarni', specialty: 'Orthopedic', experience: '17 years', rating: 4.8, fee: 3800, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd104', name: 'Dr. Madhavi Desai', specialty: 'Dermatologist', experience: '12 years', rating: 4.7, fee: 2500, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd105', name: 'Dr. Gopi Krishna', specialty: 'Cardiologist', experience: '19 years', rating: 4.9, fee: 4400, avatar: '👨‍�����️', hospitalId: 'h2', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd106', name: 'Dr. Usha Pillai', specialty: 'Pediatrician', experience: '13 years', rating: 4.8, fee: 1350, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd107', name: 'Dr. Bala Subramanian', specialty: 'Gastroenterologist', experience: '16 years', rating: 4.8, fee: 3250, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd108', name: 'Dr. Vasantha Menon', specialty: 'ENT Specialist', experience: '14 years', rating: 4.7, fee: 2850, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd109', name: 'Dr. Murali Sharma', specialty: 'Neurologist', experience: '18 years', rating: 4.9, fee: 4350, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd110', name: 'Dr. Kamala Iyer', specialty: 'Ophthalmologist', experience: '15 years', rating: 4.8, fee: 2800, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd111', name: 'Dr. Ravi Kumar', specialty: 'Orthopedic', experience: '19 years', rating: 4.9, fee: 3950, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd112', name: 'Dr. Padma Reddy', specialty: 'Gynecologist', experience: '13 years', rating: 4.7, fee: 3050, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd113', name: 'Dr. Sunil Patel', specialty: 'Cardiologist', experience: '20 years', rating: 4.9, fee: 4550, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd114', name: 'Dr. Lalitha Nair', specialty: 'Dermatologist', experience: '11 years', rating: 4.7, fee: 2450, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd115', name: 'Dr. Anand Krishnan', specialty: 'Pediatrician', experience: '12 years', rating: 4.8, fee: 1320, avatar: '👨‍⚕️', hospitalId: 'h3', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd116', name: 'Dr. Gayatri Rao', specialty: 'ENT Specialist', experience: '16 years', rating: 4.8, fee: 2950, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd117', name: 'Dr. Venkat Reddy', specialty: 'Neurologist', experience: '21 years', rating: 4.9, fee: 4600, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd118', name: 'Dr. Jayanthi Kumar', specialty: 'Gynecologist', experience: '14 years', rating: 4.8, fee: 3150, avatar: '��‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd119', name: 'Dr. Aravind Menon', specialty: 'Orthopedic', experience: '18 years', rating: 4.9, fee: 3850, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd120', name: 'Dr. Sudha Iyer', specialty: 'Dermatologist', experience: '13 years', rating: 4.8, fee: 2650, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd121', name: 'Dr. Mahendra Joshi', specialty: 'Cardiologist', experience: '23 years', rating: 4.9, fee: 4800, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd122', name: 'Dr. Sunita Rao', specialty: 'Pediatrician', experience: '14 years', rating: 4.8, fee: 1450, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd123', name: 'Dr. Prakash Nair', specialty: 'Orthopedic', experience: '20 years', rating: 4.9, fee: 4000, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd124', name: 'Dr. Smita Kulkarni', specialty: 'Dermatologist', experience: '12 years', rating: 4.7, fee: 2550, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd125', name: 'Dr. Balaji Reddy', specialty: 'Neurologist', experience: '22 years', rating: 4.9, fee: 4650, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd126', name: 'Dr. Latha Menon', specialty: 'Gynecologist', experience: '15 years', rating: 4.8, fee: 3250, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd127', name: 'Dr. Krishna Sharma', specialty: 'ENT Specialist', experience: '17 years', rating: 4.8, fee: 3000, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd128', name: 'Dr. Radha Kumar', specialty: 'Ophthalmologist', experience: '14 years', rating: 4.7, fee: 2800, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd129', name: 'Dr. Gopal Iyer', specialty: 'Cardiologist', experience: '21 years', rating: 4.9, fee: 4650, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd130', name: 'Dr. Shalini Pillai', specialty: 'Pediatrician', experience: '11 years', rating: 4.7, fee: 1350, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd131', name: 'Dr. Naresh Gupta', specialty: 'Gastroenterologist', experience: '18 years', rating: 4.8, fee: 3400, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd132', name: 'Dr. Vimala Rao', specialty: 'Dermatologist', experience: '13 years', rating: 4.8, fee: 2700, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd133', name: 'Dr. Bhaskar Menon', specialty: 'Neurologist', experience: '19 years', rating: 4.9, fee: 4450, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd134', name: 'Dr. Shobha Nair', specialty: 'Gynecologist', experience: '16 years', rating: 4.8, fee: 3300, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd135', name: 'Dr. Ajay Verma', specialty: 'Orthopedic', experience: '17 years', rating: 4.8, fee: 3750, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd136', name: 'Dr. Geeta Krishnan', specialty: 'ENT Specialist', experience: '15 years', rating: 4.7, fee: 2900, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd137', name: 'Dr. Shankar Pillai', specialty: 'Cardiologist', experience: '24 years', rating: 4.9, fee: 4900, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd138', name: 'Dr. Manju Desai', specialty: 'Pediatrician', experience: '12 years', rating: 4.7, fee: 1400, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd139', name: 'Dr. Ramesh Iyer', specialty: 'Ophthalmologist', experience: '18 years', rating: 4.9, fee: 2950, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd140', name: 'Dr. Lakshmi Reddy', specialty: 'Dermatologist', experience: '14 years', rating: 4.8, fee: 2750, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd141', name: 'Dr. Subramanian Nair', specialty: 'Neurologist', experience: '20 years', rating: 4.9, fee: 4550, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd142', name: 'Dr. Sarala Kumar', specialty: 'Gynecologist', experience: '17 years', rating: 4.8, fee: 3350, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd143', name: 'Dr. Hari Shankar', specialty: 'Orthopedic', experience: '21 years', rating: 4.9, fee: 4050, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd144', name: 'Dr. Revathi Menon', specialty: 'ENT Specialist', experience: '16 years', rating: 4.8, fee: 2950, avatar: '��‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd145', name: 'Dr. Chandrashekhar Rao', specialty: 'Cardiologist', experience: '22 years', rating: 4.9, fee: 4750, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd146', name: 'Dr. Malathi Iyer', specialty: 'Pediatrician', experience: '13 years', rating: 4.8, fee: 1420, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd147', name: 'Dr. Murthy Kumar', specialty: 'Gastroenterologist', experience: '19 years', rating: 4.9, fee: 3500, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd148', name: 'Dr. Uma Reddy', specialty: 'Dermatologist', experience: '15 years', rating: 4.8, fee: 2800, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] },
+      { id: 'd149', name: 'Dr. Narayanan Pillai', specialty: 'Neurologist', experience: '23 years', rating: 4.9, fee: 4700, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['08:30', '09:30', '10:30', '13:30', '14:30', '16:00'] },
+      { id: 'd150', name: 'Dr. Sowmya Nair', specialty: 'Gynecologist', experience: '14 years', rating: 4.7, fee: 3200, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'] },
+      { id: 'd151', name: 'Dr. Mohan Kumar', specialty: 'Orthopedic', experience: '18 years', rating: 4.8, fee: 3850, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '13:00', '14:00', '15:00'] },
+      { id: 'd152', name: 'Dr. Kamala Iyer', specialty: 'Ophthalmologist', experience: '16 years', rating: 4.8, fee: 2850, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '11:00', '13:30', '15:00', '16:30'] },
+      { id: 'd153', name: 'Dr. Srinivasan Reddy', specialty: 'Cardiologist', experience: '25 years', rating: 4.9, fee: 5000, avatar: '👨‍⚕️', hospitalId: 'h2', available: ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00'] },
+      { id: 'd154', name: 'Dr. Jayalakshmi Menon', specialty: 'Pediatrician', experience: '15 years', rating: 4.8, fee: 1480, avatar: '👩‍⚕️', hospitalId: 'h3', available: ['09:00', '10:30', '12:00', '14:00', '15:30'] },
+      { id: 'd155', name: 'Dr. Venkatesh Iyer', specialty: 'ENT Specialist', experience: '18 years', rating: 4.8, fee: 3050, avatar: '👨‍⚕️', hospitalId: 'h1', available: ['08:30', '10:00', '11:30', '13:30', '15:00'] },
+      { id: 'd156', name: 'Dr. Bharathi Kumar', specialty: 'Dermatologist', experience: '16 years', rating: 4.8, fee: 2850, avatar: '👩‍⚕️', hospitalId: 'h5', available: ['10:00', '11:00', '13:00', '14:30', '16:00', '17:00'] },
+      { id: 'd157', name: 'Dr. Ananthapadmanabhan Rao', specialty: 'Neurologist', experience: '21 years', rating: 4.9, fee: 4600, avatar: '👨‍⚕️', hospitalId: 'h4', available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'] },
+      { id: 'd158', name: 'Dr. Vasanthi Pillai', specialty: 'Gynecologist', experience: '18 years', rating: 4.8, fee: 3400, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:30', '10:30', '11:30', '13:00', '14:30', '15:30'] },
+      { id: 'd159', name: 'Dr. Raghavan Nair', specialty: 'Orthopedic', experience: '22 years', rating: 4.9, fee: 4100, avatar: '👨‍⚕️', hospitalId: 'h6', available: ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00'] },
+      { id: 'd160', name: 'Dr. Savitri Menon', specialty: 'Ophthalmologist', experience: '17 years', rating: 4.8, fee: 2900, avatar: '👩‍⚕️', hospitalId: 'h1', available: ['09:00', '10:30', '12:00', '14:00', '15:30', '17:00'] }
+    ];
+
+    // State
+    let appointments = [];
+    let customers = [];
+    let newDoctors = [];
+    let loginRecords = [];
+    let selectedHospital = null;
+    let selectedDoctor = null;
+    let selectedDate = null;
+    let selectedTime = null;
+    let currentStep = 1;
+    let currentView = 'customer';
+    let adminFilter = 'all';
+    let doctorFilter = 'all';
+    let hospitalFilter = 'all';
+    let loggedInDoctor = null;
+    let doctorAppointmentFilter = 'all';
+    let loggedInCustomer = null;
+    let customerAppointmentFilter = 'all';
+    
+    // OTP State
+    let customerOTP = '';
+    let customerLoginMethod = 'email';
+    let customerLoginIdentifier = '';
+    let doctorOTP = '';
+    let doctorLoginMethod = 'email';
+    let selectedDoctorId = '';
+
+    // Default Config
+    const defaultConfig = {
+      clinic_name: 'MedBook Pro',
+      clinic_tagline: 'Healthcare Excellence',
+      hero_title: 'Book Your Doctor Appointment',
+      hero_subtitle: 'Select your specialist, choose a convenient time, and get your token instantly',
+      background_color: '#0f172a',
+      surface_color: '#ffffff',
+      text_color: '#334155',
+      primary_action_color: '#10b981',
+      secondary_action_color: '#64748b',
+      font_family: 'Outfit',
+      font_size: 16
+    };
+
+    let config = { ...defaultConfig };
+
+    // Data Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        // Separate appointments, customers, doctors, and login records by type
+        appointments = data.filter(item => item.record_type === 'appointment');
+        customers = data.filter(item => item.record_type === 'customer');
+        newDoctors = data.filter(item => item.record_type === 'doctor');
+        loginRecords = data.filter(item => item.record_type === 'login');
+        
+        renderMyAppointments();
+        renderAdminAppointments();
+        updateStats();
+        if (loggedInDoctor) {
+          renderDoctorAppointments();
+          updateDoctorStats();
+          populateDoctorSelect();
+        }
+        if (loggedInCustomer) {
+          renderCustomerAppointments();
+          updateCustomerStats();
+        }
+        if (currentView === 'admin') {
+          renderLoginRecords();
+        }
+      }
+    };
+
+    // Element SDK Implementation
+    function onConfigChange(cfg) {
+      const c = { ...defaultConfig, ...cfg };
+      
+      // Update text content
+      document.getElementById('nav-clinic-name').textContent = c.clinic_name;
+      document.getElementById('nav-tagline').textContent = c.clinic_tagline;
+      document.getElementById('hero-title').textContent = c.hero_title;
+      document.getElementById('hero-subtitle').textContent = c.hero_subtitle;
+
+      // Update colors
+      document.body.style.background = `linear-gradient(135deg, ${c.background_color} 0%, ${adjustColor(c.background_color, 30)} 50%, ${c.background_color} 100%)`;
+      
+      document.querySelectorAll('.glass-card').forEach(el => {
+        el.style.backgroundColor = c.surface_color;
+      });
+
+      document.querySelectorAll('.text-slate-800, .text-slate-700').forEach(el => {
+        el.style.color = c.text_color;
+      });
+
+      // Primary action buttons
+      const primaryBtns = document.querySelectorAll('#nav-customer, #confirm-booking-btn, #proceed-btn');
+      primaryBtns.forEach(btn => {
+        btn.style.background = `linear-gradient(135deg, ${c.primary_action_color}, ${adjustColor(c.primary_action_color, -20)})`;
+      });
+
+      // Font
+      document.body.style.fontFamily = `${c.font_family}, Outfit, sans-serif`;
+      
+      // Font size scaling
+      const baseSize = c.font_size;
+      document.querySelectorAll('h2').forEach(el => el.style.fontSize = `${baseSize * 2.5}px`);
+      document.querySelectorAll('h3').forEach(el => el.style.fontSize = `${baseSize * 1.25}px`);
+      document.querySelectorAll('p, span, button, input, label').forEach(el => {
+        if (!el.closest('h2') && !el.closest('h3')) {
+          el.style.fontSize = `${baseSize}px`;
+        }
+      });
+    }
+
+    function adjustColor(hex, amount) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+      const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+      const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+      return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+    }
+
+    function mapToCapabilities(cfg) {
+      const c = { ...defaultConfig, ...cfg };
+      return {
+        recolorables: [
+          {
+            get: () => c.background_color,
+            set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }
+          },
+          {
+            get: () => c.surface_color,
+            set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }
+          },
+          {
+            get: () => c.text_color,
+            set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }
+          },
+          {
+            get: () => c.primary_action_color,
+            set: (v) => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); }
+          },
+          {
+            get: () => c.secondary_action_color,
+            set: (v) => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => c.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => c.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(cfg) {
+      const c = { ...defaultConfig, ...cfg };
+      return new Map([
+        ['clinic_name', c.clinic_name],
+        ['clinic_tagline', c.clinic_tagline],
+        ['hero_title', c.hero_title],
+        ['hero_subtitle', c.hero_subtitle]
+      ]);
+    }
+
+    // Initialize SDKs
+    async function init() {
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+        config = { ...defaultConfig, ...window.elementSdk.config };
+      }
+
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize data SDK');
+        }
+      }
+
+      renderDoctors();
+      renderDatePicker();
+      onConfigChange(config);
+    }
+
+    // View Navigation
+    function showView(view) {
+      currentView = view;
+      document.getElementById('customer-view').classList.toggle('hidden', view !== 'customer');
+      document.getElementById('doctor-view').classList.toggle('hidden', view !== 'doctor');
+      document.getElementById('patient-view').classList.toggle('hidden', view !== 'patient');
+      document.getElementById('admin-view').classList.toggle('hidden', view !== 'admin');
+      
+      document.getElementById('nav-customer').classList.toggle('bg-emerald-500', view === 'customer');
+      document.getElementById('nav-customer').classList.toggle('bg-slate-700', view !== 'customer');
+      document.getElementById('nav-customer').classList.toggle('text-white', view === 'customer');
+      document.getElementById('nav-customer').classList.toggle('text-slate-300', view !== 'customer');
+      
+      document.getElementById('nav-doctor').classList.toggle('bg-emerald-500', view === 'doctor');
+      document.getElementById('nav-doctor').classList.toggle('bg-slate-700', view !== 'doctor');
+      document.getElementById('nav-doctor').classList.toggle('text-white', view === 'doctor');
+      document.getElementById('nav-doctor').classList.toggle('text-slate-300', view !== 'doctor');
+      
+      document.getElementById('nav-patient').classList.toggle('bg-emerald-500', view === 'patient');
+      document.getElementById('nav-patient').classList.toggle('bg-slate-700', view !== 'patient');
+      document.getElementById('nav-patient').classList.toggle('text-white', view === 'patient');
+      document.getElementById('nav-patient').classList.toggle('text-slate-300', view !== 'patient');
+      
+      document.getElementById('nav-admin').classList.toggle('bg-emerald-500', view === 'admin');
+      document.getElementById('nav-admin').classList.toggle('bg-slate-700', view !== 'admin');
+      document.getElementById('nav-admin').classList.toggle('text-white', view === 'admin');
+      document.getElementById('nav-admin').classList.toggle('text-slate-300', view !== 'admin');
+
+      if (view === 'doctor') {
+        populateDoctorSelect();
+      }
+    }
+
+    // Hospital Filtering
+    function filterByHospital(hospitalId) {
+      hospitalFilter = hospitalId;
+      document.querySelectorAll('.hospital-btn').forEach(btn => {
+        const isActive = btn.dataset.hospital === hospitalId;
+        btn.classList.toggle('bg-emerald-500', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-slate-200', !isActive);
+        btn.classList.toggle('text-slate-600', !isActive);
+      });
+      renderDoctors();
+    }
+
+    // Doctor Filtering
+    function filterDoctors(specialty) {
+      doctorFilter = specialty;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === specialty;
+        btn.classList.toggle('bg-emerald-500', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-slate-200', !isActive);
+        btn.classList.toggle('text-slate-600', !isActive);
+      });
+      renderDoctors();
+    }
+
+    // Render Doctors
+    function renderDoctors() {
+      const grid = document.getElementById('doctor-grid');
+      let filtered = doctors;
+      
+      // Apply hospital filter
+      if (hospitalFilter !== 'all') {
+        filtered = filtered.filter(d => d.hospitalId === hospitalFilter);
+      }
+      
+      // Apply specialty filter
+      if (doctorFilter !== 'all') {
+        filtered = filtered.filter(d => d.specialty === doctorFilter);
+      }
+      
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-500">No doctors found with the selected filters.</div>';
+        return;
+      }
+      
+      grid.innerHTML = filtered.map(doctor => {
+        const hospital = hospitals.find(h => h.id === doctor.hospitalId);
+        return `
+          <div class="doctor-card border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg ${selectedDoctor?.id === doctor.id ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-emerald-300'}" onclick="selectDoctor('${doctor.id}')">
+            <div class="flex items-start gap-3">
+              <div class="text-4xl">${doctor.avatar}</div>
+              <div class="flex-1">
+                <h4 class="font-semibold text-slate-800">${doctor.name}</h4>
+                <p class="text-sm text-emerald-600 font-medium">${doctor.specialty}</p>
+                <p class="text-xs text-slate-500">${doctor.experience} experience</p>
+              </div>
+            </div>
+            <div class="mt-3 mb-3 flex items-center gap-1 text-xs text-slate-600 bg-slate-50 px-2 py-1 rounded">
+              <span>${hospital.icon}</span>
+              <span>${hospital.name}</span>
+            </div>
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div class="flex items-center gap-1">
+                <span class="text-amber-400">★</span>
+                <span class="text-sm font-medium text-slate-700">${doctor.rating}</span>
+              </div>
+              <div class="text-right">
+                <span class="text-lg font-bold text-emerald-600">₹${doctor.fee}</span>
+                <p class="text-xs text-slate-500">per visit</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Select Doctor
+    function selectDoctor(id) {
+      selectedDoctor = doctors.find(d => d.id === id);
+      renderDoctors();
+      setTimeout(() => goToStep(2), 300);
+    }
+
+    // Step Navigation
+    function goToStep(step) {
+      currentStep = step;
+      
+      document.getElementById('step1').classList.toggle('hidden', step !== 1);
+      document.getElementById('step2').classList.toggle('hidden', step !== 2);
+      document.getElementById('step3').classList.toggle('hidden', step !== 3);
+
+      // Update indicators
+      for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}-indicator`);
+        if (i <= step) {
+          indicator.classList.add('bg-emerald-500', 'text-white');
+          indicator.classList.remove('bg-slate-700', 'text-slate-400');
+        } else {
+          indicator.classList.remove('bg-emerald-500', 'text-white');
+          indicator.classList.add('bg-slate-700', 'text-slate-400');
+        }
+      }
+
+      if (step === 2 && selectedDoctor) {
+        renderSelectedDoctorInfo();
+        renderTimeSlots();
+      }
+
+      if (step === 3) {
+        renderBookingSummary();
+      }
+    }
+
+    // Render Selected Doctor Info
+    function renderSelectedDoctorInfo() {
+      const info = document.getElementById('selected-doctor-info');
+      const hospital = hospitals.find(h => h.id === selectedDoctor.hospitalId);
+      info.innerHTML = `
+        <div class="flex items-center gap-4">
+          <div class="text-5xl">${selectedDoctor.avatar}</div>
+          <div>
+            <h4 class="font-semibold text-slate-800 text-lg">${selectedDoctor.name}</h4>
+            <p class="text-emerald-600 font-medium">${selectedDoctor.specialty}</p>
+            <p class="text-sm text-slate-500">${selectedDoctor.experience} experience • ����� ${selectedDoctor.rating}</p>
+            <p class="text-xs text-slate-600 flex items-center gap-1 mt-1">
+              <span>${hospital.icon}</span>
+              <span>${hospital.name}</span>
+            </p>
+          </div>
+          <div class="ml-auto text-right">
+            <span class="text-2xl font-bold text-emerald-600">₹${selectedDoctor.fee}</span>
+            <p class="text-xs text-slate-500">Consultation Fee</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Date Picker
+    function renderDatePicker() {
+      const picker = document.getElementById('date-picker');
+      const dates = [];
+      const today = new Date();
+      
+      for (let i = 0; i < 14; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        dates.push(date);
+      }
+
+      picker.innerHTML = dates.map(date => {
+        const dateStr = date.toISOString().split('T')[0];
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = date.getDate();
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const isSelected = selectedDate === dateStr;
+        
+        return `
+          <button onclick="selectDate('${dateStr}')" class="flex-shrink-0 w-20 py-3 rounded-xl text-center transition-all ${isSelected ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            <div class="text-xs font-medium opacity-75">${dayName}</div>
+            <div class="text-xl font-bold">${dayNum}</div>
+            <div class="text-xs opacity-75">${month}</div>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectDate(date) {
+      selectedDate = date;
+      selectedTime = null;
+      renderDatePicker();
+      renderTimeSlots();
+      updateProceedButton();
+    }
+
+    // Time Slots
+    function renderTimeSlots() {
+      const container = document.getElementById('time-slots');
+      if (!selectedDoctor) return;
+
+      container.innerHTML = selectedDoctor.available.map(time => {
+        const isSelected = selectedTime === time;
+        return `
+          <button onclick="selectTime('${time}')" class="py-3 px-4 rounded-lg text-sm font-medium transition-all ${isSelected ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            ${time}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectTime(time) {
+      selectedTime = time;
+      renderTimeSlots();
+      updateProceedButton();
+    }
+
+    function updateProceedButton() {
+      const btn = document.getElementById('proceed-btn');
+      btn.disabled = !selectedDate || !selectedTime;
+    }
+
+    // Booking Summary
+    function renderBookingSummary() {
+      const summary = document.getElementById('booking-summary');
+      const dateObj = new Date(selectedDate);
+      const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      summary.innerHTML = `
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">${selectedDoctor.avatar}</div>
+          <div>
+            <p class="font-semibold text-slate-800">${selectedDoctor.name}</p>
+            <p class="text-sm text-emerald-600">${selectedDoctor.specialty}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <span class="text-sm">${formattedDate}</span>
+        </div>
+        <div class="flex items-center gap-2 text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="text-sm">${selectedTime}</span>
+        </div>
+        <div class="pt-3 border-t border-slate-200">
+          <div class="flex justify-between items-center">
+            <span class="text-slate-600">Consultation Fee</span>
+            <span class="text-xl font-bold text-emerald-600">₹${selectedDoctor.fee}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Form Submission
+    document.getElementById('patient-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (appointments.length >= 999) {
+        showToast('Maximum appointment limit reached. Please contact support.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('confirm-booking-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⟳</span> Processing...';
+
+      const tokenNumber = Math.floor(1000 + Math.random() * 9000);
+      const hospital = hospitals.find(h => h.id === selectedDoctor.hospitalId);
+      
+      const appointment = {
+        record_type: 'appointment',
+        id: Date.now().toString(),
+        patient_name: document.getElementById('patient-name').value,
+        patient_email: document.getElementById('patient-email').value,
+        patient_phone: document.getElementById('patient-phone').value,
+        doctor_id: selectedDoctor.id,
+        doctor_name: selectedDoctor.name,
+        specialty: selectedDoctor.specialty,
+        hospital_id: hospital.id,
+        hospital_name: hospital.name,
+        date: selectedDate,
+        time_slot: selectedTime,
+        token_number: tokenNumber,
+        consultation_fee: selectedDoctor.fee,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+
+      if (window.dataSdk) {
+        const result = await window.dataSdk.create(appointment);
+        if (result.isOk) {
+          showSuccessModal(tokenNumber);
+          resetBookingFlow();
+        } else {
+          showToast('Failed to book appointment. Please try again.', 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Confirm Booking';
+    });
+
+    function showSuccessModal(tokenNumber) {
+      const modal = document.getElementById('success-modal');
+      const tokenDisplay = document.getElementById('token-display');
+      const dateObj = new Date(selectedDate);
+      const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      
+      tokenDisplay.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-amber-700">Your Token Number</p>
+            <p class="text-3xl font-bold text-amber-600">#${tokenNumber}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-amber-700">${formattedDate}</p>
+            <p class="font-semibold text-amber-600">${selectedTime}</p>
+          </div>
+        </div>
+      `;
+      
+      modal.classList.remove('hidden');
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('success-modal').classList.add('hidden');
+    }
+
+    function resetBookingFlow() {
+      selectedDoctor = null;
+      selectedDate = null;
+      selectedTime = null;
+      document.getElementById('patient-form').reset();
+      goToStep(1);
+      renderDoctors();
+    }
+
+    // My Appointments
+    function renderMyAppointments() {
+      const container = document.getElementById('my-appointments');
+      
+      if (appointments.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">No appointments yet. Book your first appointment above!</p>';
+        return;
+      }
+
+      const sorted = [...appointments].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      container.innerHTML = sorted.map(apt => {
+        const dateObj = new Date(apt.date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const doctor = doctors.find(d => d.id === apt.doctor_id) || { avatar: '👨‍��️' };
+        const hospital = hospitals.find(h => h.id === apt.hospital_id);
+        
+        const statusClass = apt.status === 'accepted' ? 'status-accepted' : apt.status === 'declined' ? 'status-declined' : 'status-pending';
+        const statusText = apt.status.charAt(0).toUpperCase() + apt.status.slice(1);
+
+        return `
+          <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-3xl">${doctor.avatar}</div>
+            <div class="flex-1">
+              <p class="font-semibold text-slate-800">${apt.doctor_name}</p>
+              <p class="text-sm text-slate-500">${apt.specialty} • ${formattedDate} at ${apt.time_slot}</p>
+              ${hospital ? `<p class="text-xs text-slate-500 flex items-center gap-1 mt-1"><span>${hospital.icon}</span><span>${apt.hospital_name}</span></p>` : ''}
+            </div>
+            <div class="text-center">
+              <div class="token-badge text-white text-xs font-bold px-2 py-1 rounded-full mb-1">#${apt.token_number}</div>
+              <span class="${statusClass} text-white text-xs px-3 py-1 rounded-full">${statusText}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Admin Functions
+    function filterAppointments(filter) {
+      adminFilter = filter;
+      document.querySelectorAll('.admin-filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-emerald-500', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-slate-700', !isActive);
+        btn.classList.toggle('text-slate-300', !isActive);
+      });
+      renderAdminAppointments();
+    }
+
+    function renderAdminAppointments() {
+      const container = document.getElementById('admin-appointments');
+      
+      let filtered = [...appointments];
+      if (adminFilter !== 'all') {
+        filtered = filtered.filter(apt => apt.status === adminFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">No appointment requests found.</p>';
+        return;
+      }
+
+      const sorted = filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      container.innerHTML = sorted.map(apt => {
+        const dateObj = new Date(apt.date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        const doctor = doctors.find(d => d.id === apt.doctor_id) || { avatar: '👨���⚕️' };
+        const hospital = hospitals.find(h => h.id === apt.hospital_id);
+        
+        const statusClass = apt.status === 'accepted' ? 'status-accepted' : apt.status === 'declined' ? 'status-declined' : 'status-pending';
+        const statusText = apt.status.charAt(0).toUpperCase() + apt.status.slice(1);
+
+        const actionButtons = apt.status === 'pending' ? `
+          <div class="flex gap-2">
+            <button onclick="updateAppointmentStatus('${apt.__backendId}', 'accepted')" class="px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Accept
+            </button>
+            <button onclick="updateAppointmentStatus('${apt.__backendId}', 'declined')" class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-all flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              Decline
+            </button>
+          </div>
+        ` : `<span class="${statusClass} text-white text-sm px-4 py-2 rounded-lg font-medium">${statusText}</span>`;
+
+        return `
+          <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex flex-wrap items-start gap-4">
+              <div class="flex items-center gap-3">
+                <div class="token-badge text-white text-lg font-bold w-14 h-14 rounded-xl flex items-center justify-center">#${apt.token_number}</div>
+                <div>
+                  <p class="font-semibold text-slate-800">${apt.patient_name}</p>
+                  <p class="text-sm text-slate-500">${apt.patient_email}</p>
+                  <p class="text-sm text-slate-500">${apt.patient_phone}</p>
+                </div>
+              </div>
+              
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-2xl">${doctor.avatar}</span>
+                  <div>
+                    <p class="font-medium text-slate-800">${apt.doctor_name}</p>
+                    <p class="text-sm text-emerald-600">${apt.specialty}</p>
+                  </div>
+                </div>
+                ${hospital ? `<p class="text-xs text-slate-600 flex items-center gap-1 mb-2"><span>${hospital.icon}</span><span>${apt.hospital_name}</span></p>` : ''}
+                <div class="flex items-center gap-4 text-sm text-slate-600">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    ${formattedDate}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    ${apt.time_slot}
+                  </span>
+                  <span class="font-semibold text-emerald-600">₹${apt.consultation_fee}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center">
+                ${actionButtons}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateAppointmentStatus(backendId, newStatus) {
+      const apt = appointments.find(a => a.__backendId === backendId);
+      if (!apt || !window.dataSdk) return;
+
+      const updatedApt = { ...apt, status: newStatus };
+      
+      const btn = event.target.closest('button');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⟳</span>';
+
+      const result = await window.dataSdk.update(updatedApt);
+      
+      if (result.isOk) {
+        showToast(`Appointment ${newStatus}!`, 'success');
+      } else {
+        showToast('Failed to update status. Please try again.', 'error');
+        btn.disabled = false;
+      }
+    }
+
+    function updateStats() {
+      const total = appointments.length;
+      const pending = appointments.filter(a => a.status === 'pending').length;
+      const accepted = appointments.filter(a => a.status === 'accepted').length;
+      const declined = appointments.filter(a => a.status === 'declined').length;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-pending').textContent = pending;
+      document.getElementById('stat-accepted').textContent = accepted;
+      document.getElementById('stat-declined').textContent = declined;
+    }
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-xl text-white font-medium shadow-lg z-50 fade-in ${type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // Track Login Function
+    async function trackLogin(userType, userName, userEmail) {
+      if (!window.dataSdk) return;
+
+      // Get approximate location using timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      let locationCity = 'Unknown';
+      let locationCountry = 'Unknown';
+      
+      // Extract city and country from timezone
+      if (timezone) {
+        const parts = timezone.split('/');
+        if (parts.length >= 2) {
+          locationCity = parts[1].replace(/_/g, ' ');
+          locationCountry = parts[0];
+        }
+      }
+
+      // Get device type
+      const ua = navigator.userAgent;
+      let deviceType = 'Desktop';
+      if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+        deviceType = 'Tablet';
+      } else if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+        deviceType = 'Mobile';
+      }
+
+      // Get browser
+      let browser = 'Unknown';
+      if (ua.indexOf('Firefox') > -1) {
+        browser = 'Firefox';
+      } else if (ua.indexOf('Chrome') > -1) {
+        browser = 'Chrome';
+      } else if (ua.indexOf('Safari') > -1) {
+        browser = 'Safari';
+      } else if (ua.indexOf('Edge') > -1) {
+        browser = 'Edge';
+      } else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) {
+        browser = 'Opera';
+      }
+
+      const loginRecord = {
+        record_type: 'login',
+        user_type: userType,
+        user_name: userName,
+        user_email: userEmail,
+        login_time: new Date().toISOString(),
+        location_city: locationCity,
+        location_country: locationCountry,
+        device_type: deviceType,
+        browser: browser
+      };
+
+      await window.dataSdk.create(loginRecord);
+    }
+
+    // Render Login Records
+    function renderLoginRecords() {
+      const container = document.getElementById('login-records');
+      
+      if (loginRecords.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">No login records yet.</p>';
+        return;
+      }
+
+      const sorted = [...loginRecords].sort((a, b) => new Date(b.login_time) - new Date(a.login_time));
+
+      container.innerHTML = sorted.map(record => {
+        const loginDate = new Date(record.login_time);
+        const formattedDate = loginDate.toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric' 
+        });
+        const formattedTime = loginDate.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        const userTypeColor = record.user_type === 'customer' ? 'bg-emerald-100 text-emerald-700' : 
+                             record.user_type === 'doctor' ? 'bg-blue-100 text-blue-700' : 
+                             'bg-purple-100 text-purple-700';
+        
+        const deviceIcon = record.device_type === 'Mobile' ? '📱' : 
+                          record.device_type === 'Tablet' ? '📱' : '💻';
+
+        return `
+          <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+            <div class="text-3xl">${deviceIcon}</div>
+            <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <span class="${userTypeColor} text-xs font-semibold px-2 py-1 rounded-full uppercase">${record.user_type}</span>
+                <p class="font-semibold text-slate-800 mt-1">${record.user_name}</p>
+                <p class="text-xs text-slate-500">${record.user_email}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Login Time</p>
+                <p class="text-sm font-medium text-slate-700">${formattedDate}</p>
+                <p class="text-sm text-slate-600">${formattedTime}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Location</p>
+                <p class="text-sm font-medium text-slate-700">🌍 ${record.location_city}</p>
+                <p class="text-xs text-slate-600">${record.location_country}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Device & Browser</p>
+                <p class="text-sm font-medium text-slate-700">${record.device_type}</p>
+                <p class="text-xs text-slate-600">${record.browser}</p>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Doctor Login Functions
+    function showDoctorLogin() {
+      document.getElementById('doctor-login-form').classList.remove('hidden');
+      document.getElementById('doctor-register-form').classList.add('hidden');
+    }
+
+    function showDoctorRegister() {
+      document.getElementById('doctor-login-form').classList.add('hidden');
+      document.getElementById('doctor-register-form').classList.remove('hidden');
+    }
+
+    function populateDoctorSelect() {
+      const select = document.getElementById('doctor-select');
+      select.innerHTML = '<option value="">Choose a doctor...</option>';
+      
+      // Add pre-existing doctors
+      doctors.forEach(doctor => {
+        const hospital = hospitals.find(h => h.id === doctor.hospitalId);
+        const option = document.createElement('option');
+        option.value = doctor.id;
+        option.textContent = `${doctor.name} - ${doctor.specialty} (${hospital.name})`;
+        select.appendChild(option);
+      });
+
+      // Add newly registered doctors
+      newDoctors.forEach(doctor => {
+        const hospital = hospitals.find(h => h.id === doctor.hospital_id);
+        const option = document.createElement('option');
+        option.value = `new_${doctor.__backendId}`;
+        option.textContent = `${doctor.name} - ${doctor.specialty} (${hospital.name})`;
+        select.appendChild(option);
+      });
+    }
+
+    document.getElementById('doctor-register').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (customers.length + newDoctors.length + appointments.length >= 999) {
+        showToast('Storage limit reached. Please contact support.', 'error');
+        return;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⟳</span> Creating Profile...';
+
+      const avatarOptions = ['👨‍⚕️', '👩‍⚕️', '🧑‍⚕️'];
+      const randomAvatar = avatarOptions[Math.floor(Math.random() * avatarOptions.length)];
+
+      const doctor = {
+        record_type: 'doctor',
+        name: document.getElementById('doctor-reg-name').value,
+        specialty: document.getElementById('doctor-reg-specialty').value,
+        experience: `${document.getElementById('doctor-reg-experience').value} years`,
+        hospital_id: document.getElementById('doctor-reg-hospital').value,
+        fee: parseInt(document.getElementById('doctor-reg-fee').value),
+        rating: 4.5,
+        avatar: randomAvatar,
+        available: ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
+        created_at: new Date().toISOString()
+      };
+
+      if (window.dataSdk) {
+        const result = await window.dataSdk.create(doctor);
+        if (result.isOk) {
+          showToast('Doctor profile created successfully! You can now login.', 'success');
+          document.getElementById('doctor-register').reset();
+          showDoctorLogin();
+        } else {
+          showToast('Failed to create profile. Please try again.', 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Create Doctor Profile';
+    });
+
+    // Doctor OTP Functions
+    function selectDoctorLoginMethod(method) {
+      doctorLoginMethod = method;
+      
+      document.getElementById('doctor-email-method').className = method === 'email' 
+        ? 'p-4 rounded-xl border-2 border-blue-500 bg-blue-50 transition-all flex flex-col items-center gap-2'
+        : 'p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-blue-300 transition-all flex flex-col items-center gap-2';
+      
+      document.getElementById('doctor-mobile-method').className = method === 'mobile' 
+        ? 'p-4 rounded-xl border-2 border-blue-500 bg-blue-50 transition-all flex flex-col items-center gap-2'
+        : 'p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-blue-300 transition-all flex flex-col items-center gap-2';
+    }
+
+    document.getElementById('doctor-select-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      selectedDoctorId = document.getElementById('doctor-select').value;
+      if (!selectedDoctorId) {
+        showToast('Please select a doctor profile', 'error');
+        return;
+      }
+      
+      // Get doctor info
+      let doctorData;
+      let contactInfo;
+      
+      if (selectedDoctorId.startsWith('new_')) {
+        const backendId = selectedDoctorId.replace('new_', '');
+        doctorData = newDoctors.find(d => d.__backendId === backendId);
+        if (doctorLoginMethod === 'email') {
+          contactInfo = doctorData.email || 'doctor@example.com';
+        } else {
+          contactInfo = doctorData.phone || doctorData.phone;
+        }
+      } else {
+        doctorData = doctors.find(d => d.id === selectedDoctorId);
+        // Pre-existing doctors don't have email/phone in data, use mock
+        if (doctorLoginMethod === 'email') {
+          contactInfo = `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`;
+        } else {
+          contactInfo = '+1 555-' + Math.floor(1000 + Math.random() * 9000);
+        }
+      }
+      
+      if (!doctorData) {
+        showToast('Doctor not found', 'error');
+        return;
+      }
+      
+      // Generate OTP
+      doctorOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Show OTP screen
+      document.getElementById('doctor-select-profile').classList.add('hidden');
+      document.getElementById('doctor-verify-otp').classList.remove('hidden');
+      document.getElementById('doctor-otp-sent-to').textContent = contactInfo;
+      document.getElementById('doctor-demo-otp').textContent = doctorOTP;
+      
+      showToast(`OTP sent to your ${doctorLoginMethod}!`, 'success');
+      
+      // Focus first OTP input
+      document.querySelectorAll('.doctor-otp-digit')[0].focus();
+    });
+
+    // Doctor OTP input auto-advance
+    document.querySelectorAll('.doctor-otp-digit').forEach((input, index, inputs) => {
+      input.addEventListener('input', function(e) {
+        if (this.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+      
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value === '' && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+
+    document.getElementById('doctor-otp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const enteredOTP = Array.from(document.querySelectorAll('.doctor-otp-digit'))
+        .map(input => input.value)
+        .join('');
+      
+      if (enteredOTP === doctorOTP) {
+        loginDoctor(selectedDoctorId);
+        showToast('Login successful!', 'success');
+        resetDoctorOTPForm();
+      } else {
+        showToast('Invalid OTP. Please try again.', 'error');
+        document.querySelectorAll('.doctor-otp-digit').forEach(input => input.value = '');
+        document.querySelectorAll('.doctor-otp-digit')[0].focus();
+      }
+    });
+
+    function resendDoctorOTP() {
+      doctorOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('doctor-demo-otp').textContent = doctorOTP;
+      showToast('New OTP sent!', 'success');
+    }
+
+    function backToDoctorSelect() {
+      document.getElementById('doctor-select-profile').classList.remove('hidden');
+      document.getElementById('doctor-verify-otp').classList.add('hidden');
+      resetDoctorOTPForm();
+    }
+
+    function resetDoctorOTPForm() {
+      document.querySelectorAll('.doctor-otp-digit').forEach(input => input.value = '');
+      doctorOTP = '';
+      selectedDoctorId = '';
+    }
+
+    function loginDoctor(doctorId) {
+      let doctorData;
+      let hospital;
+
+      // Check if it's a pre-existing doctor or newly registered
+      if (doctorId.startsWith('new_')) {
+        const backendId = doctorId.replace('new_', '');
+        doctorData = newDoctors.find(d => d.__backendId === backendId);
+        if (!doctorData) return;
+        hospital = hospitals.find(h => h.id === doctorData.hospital_id);
+      } else {
+        doctorData = doctors.find(d => d.id === doctorId);
+        if (!doctorData) return;
+        hospital = hospitals.find(h => h.id === doctorData.hospitalId);
+      }
+
+      loggedInDoctor = doctorData;
+      
+      // Track login
+      const doctorEmail = doctorData.email || `${doctorData.name.toLowerCase().replace(/\s+/g, '.')}@hospital.com`;
+      trackLogin('doctor', doctorData.name, doctorEmail);
+      
+      document.getElementById('doctor-login-form').classList.add('hidden');
+      document.getElementById('doctor-dashboard').classList.remove('hidden');
+      
+      document.getElementById('doctor-avatar').textContent = doctorData.avatar;
+      document.getElementById('doctor-name').textContent = doctorData.name;
+      document.getElementById('doctor-specialty').textContent = doctorData.specialty;
+      document.getElementById('doctor-experience').textContent = `${doctorData.experience} • ★ ${doctorData.rating}`;
+      document.getElementById('doctor-hospital').innerHTML = `<span>${hospital.icon}</span><span>${hospital.name}</span>`;
+      
+      renderDoctorAppointments();
+      updateDoctorStats();
+    }
+
+    function logoutDoctor() {
+      loggedInDoctor = null;
+      document.getElementById('doctor-login-form').classList.remove('hidden');
+      document.getElementById('doctor-dashboard').classList.add('hidden');
+      document.getElementById('doctor-select').value = '';
+    }
+
+    function filterDoctorAppointments(filter) {
+      doctorAppointmentFilter = filter;
+      document.querySelectorAll('.doctor-filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-blue-500', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-slate-700', !isActive);
+        btn.classList.toggle('text-slate-300', !isActive);
+      });
+      renderDoctorAppointments();
+    }
+
+    function renderDoctorAppointments() {
+      if (!loggedInDoctor) return;
+
+      const container = document.getElementById('doctor-appointments');
+      
+      // Get doctor ID - handle both pre-existing and new doctors
+      let doctorIdentifier;
+      if (loggedInDoctor.id) {
+        // Pre-existing doctor
+        doctorIdentifier = loggedInDoctor.id;
+      } else if (loggedInDoctor.__backendId) {
+        // Newly registered doctor - use their backend ID
+        doctorIdentifier = `new_${loggedInDoctor.__backendId}`;
+      }
+
+      let filtered = appointments.filter(apt => {
+        if (apt.doctor_id === doctorIdentifier) return true;
+        // Also check if appointment is for a pre-existing doctor when logged in as new doctor
+        if (doctorIdentifier && doctorIdentifier.startsWith('new_') && apt.doctor_id === loggedInDoctor.id) return true;
+        return false;
+      });
+      
+      if (doctorAppointmentFilter !== 'all') {
+        filtered = filtered.filter(apt => apt.status === doctorAppointmentFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">No appointments found.</p>';
+        return;
+      }
+
+      const sorted = filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      container.innerHTML = sorted.map(apt => {
+        const dateObj = new Date(apt.date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        
+        const statusClass = apt.status === 'accepted' ? 'status-accepted' : apt.status === 'declined' ? 'status-declined' : 'status-pending';
+        const statusText = apt.status.charAt(0).toUpperCase() + apt.status.slice(1);
+
+        const actionButtons = apt.status === 'pending' ? `
+          <div class="flex gap-2">
+            <button onclick="updateDoctorAppointmentStatus('${apt.__backendId}', 'accepted')" class="px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 transition-all flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Accept
+            </button>
+            <button onclick="updateDoctorAppointmentStatus('${apt.__backendId}', 'declined')" class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-lg hover:bg-red-600 transition-all flex items-center gap-1">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              Decline
+            </button>
+          </div>
+        ` : `<span class="${statusClass} text-white text-sm px-4 py-2 rounded-lg font-medium">${statusText}</span>`;
+
+        return `
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="token-badge text-white text-lg font-bold w-14 h-14 rounded-xl flex items-center justify-center">#${apt.token_number}</div>
+                <div>
+                  <p class="font-semibold text-slate-800">${apt.patient_name}</p>
+                  <p class="text-sm text-slate-500">${apt.patient_email}</p>
+                  <p class="text-sm text-slate-500">${apt.patient_phone}</p>
+                </div>
+              </div>
+              
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-center gap-4 text-sm text-slate-600 mb-2">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    ${formattedDate}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-slate-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>${apt.time_slot}</span>
+                  <span class="ml-2 font-semibold text-emerald-600">₹${apt.consultation_fee}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center">
+                ${actionButtons}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function updateDoctorAppointmentStatus(backendId, newStatus) {
+      const apt = appointments.find(a => a.__backendId === backendId);
+      if (!apt || !window.dataSdk) return;
+
+      const updatedApt = { ...apt, status: newStatus };
+      
+      const btn = event.target.closest('button');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⟳</span>';
+
+      const result = await window.dataSdk.update(updatedApt);
+      
+      if (result.isOk) {
+        showToast(`Appointment ${newStatus}!`, 'success');
+      } else {
+        showToast('Failed to update status. Please try again.', 'error');
+        btn.disabled = false;
+      }
+    }
+
+    function updateDoctorStats() {
+      if (!loggedInDoctor) return;
+
+      // Get doctor ID - handle both pre-existing and new doctors
+      let doctorIdentifier;
+      if (loggedInDoctor.id) {
+        doctorIdentifier = loggedInDoctor.id;
+      } else if (loggedInDoctor.__backendId) {
+        doctorIdentifier = `new_${loggedInDoctor.__backendId}`;
+      }
+
+      const myAppointments = appointments.filter(apt => {
+        if (apt.doctor_id === doctorIdentifier) return true;
+        if (doctorIdentifier && doctorIdentifier.startsWith('new_') && apt.doctor_id === loggedInDoctor.id) return true;
+        return false;
+      });
+
+      const pending = myAppointments.filter(a => a.status === 'pending').length;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const todayAppointments = myAppointments.filter(a => a.date === today && a.status === 'accepted').length;
+
+      document.getElementById('doctor-stat-total').textContent = myAppointments.length;
+      document.getElementById('doctor-stat-pending').textContent = pending;
+      document.getElementById('doctor-stat-today').textContent = todayAppointments;
+    }
+
+    // Customer Login Functions
+    function showCustomerLogin() {
+      document.getElementById('customer-login-form').classList.remove('hidden');
+      document.getElementById('customer-register-form').classList.add('hidden');
+    }
+
+    function showCustomerRegister() {
+      document.getElementById('customer-login-form').classList.add('hidden');
+      document.getElementById('customer-register-form').classList.remove('hidden');
+    }
+
+    document.getElementById('customer-register').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (customers.length + newDoctors.length + appointments.length >= 999) {
+        showToast('Storage limit reached. Please contact support.', 'error');
+        return;
+      }
+
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-spin">⟳</span> Creating Account...';
+
+      const email = document.getElementById('customer-reg-email').value.trim().toLowerCase();
+      
+      // Check if customer already exists
+      const existingCustomer = customers.find(c => c.email.toLowerCase() === email);
+      if (existingCustomer) {
+        showToast('An account with this email already exists. Please login.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Create Account';
+        return;
+      }
+
+      const customer = {
+        record_type: 'customer',
+        name: document.getElementById('customer-reg-name').value,
+        email: email,
+        phone: document.getElementById('customer-reg-phone').value,
+        created_at: new Date().toISOString()
+      };
+
+      if (window.dataSdk) {
+        const result = await window.dataSdk.create(customer);
+        if (result.isOk) {
+          showToast('Account created successfully! You can now login.', 'success');
+          document.getElementById('customer-register').reset();
+          showCustomerLogin();
+          document.getElementById('customer-email-input').value = email;
+        } else {
+          showToast('Failed to create account. Please try again.', 'error');
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Create Account';
+    });
+
+    // Customer OTP Functions
+    function selectCustomerLoginMethod(method) {
+      customerLoginMethod = method;
+      
+      document.getElementById('customer-email-method').className = method === 'email' 
+        ? 'p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 transition-all flex flex-col items-center gap-2'
+        : 'p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-emerald-300 transition-all flex flex-col items-center gap-2';
+      
+      document.getElementById('customer-mobile-method').className = method === 'mobile' 
+        ? 'p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 transition-all flex flex-col items-center gap-2'
+        : 'p-4 rounded-xl border-2 border-slate-300 bg-white hover:border-emerald-300 transition-all flex flex-col items-center gap-2';
+      
+      if (method === 'email') {
+        document.getElementById('customer-email-input-group').classList.remove('hidden');
+        document.getElementById('customer-mobile-input-group').classList.add('hidden');
+        document.getElementById('customer-email-input').required = true;
+        document.getElementById('customer-mobile-input').required = false;
+      } else {
+        document.getElementById('customer-email-input-group').classList.add('hidden');
+        document.getElementById('customer-mobile-input-group').classList.remove('hidden');
+        document.getElementById('customer-email-input').required = false;
+        document.getElementById('customer-mobile-input').required = true;
+      }
+    }
+
+    document.getElementById('customer-request-otp').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (customerLoginMethod === 'email') {
+        customerLoginIdentifier = document.getElementById('customer-email-input').value.trim().toLowerCase();
+      } else {
+        customerLoginIdentifier = document.getElementById('customer-mobile-input').value.trim();
+      }
+      
+      // Check if customer exists
+      const customer = customers.find(c => 
+        (customerLoginMethod === 'email' && c.email.toLowerCase() === customerLoginIdentifier) ||
+        (customerLoginMethod === 'mobile' && c.phone === customerLoginIdentifier)
+      );
+      
+      if (!customer) {
+        showToast('No account found. Please register first.', 'error');
+        return;
+      }
+      
+      // Generate OTP
+      customerOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Show OTP screen
+      document.getElementById('customer-login-method').classList.add('hidden');
+      document.getElementById('customer-verify-otp').classList.remove('hidden');
+      document.getElementById('customer-otp-sent-to').textContent = customerLoginIdentifier;
+      document.getElementById('customer-demo-otp').textContent = customerOTP;
+      
+      showToast(`OTP sent to your ${customerLoginMethod}!`, 'success');
+      
+      // Focus first OTP input
+      document.querySelectorAll('.customer-otp-digit')[0].focus();
+    });
+
+    // OTP input auto-advance
+    document.querySelectorAll('.customer-otp-digit').forEach((input, index, inputs) => {
+      input.addEventListener('input', function(e) {
+        if (this.value.length === 1 && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+      
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Backspace' && this.value === '' && index > 0) {
+          inputs[index - 1].focus();
+        }
+      });
+    });
+
+    document.getElementById('customer-otp-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const enteredOTP = Array.from(document.querySelectorAll('.customer-otp-digit'))
+        .map(input => input.value)
+        .join('');
+      
+      if (enteredOTP === customerOTP) {
+        // Find customer and login
+        const customer = customers.find(c => 
+          (customerLoginMethod === 'email' && c.email.toLowerCase() === customerLoginIdentifier) ||
+          (customerLoginMethod === 'mobile' && c.phone === customerLoginIdentifier)
+        );
+        
+        if (customer) {
+          loggedInCustomer = {
+            email: customer.email,
+            name: customer.name,
+            phone: customer.phone
+          };
+          
+          // Track login
+          trackLogin('customer', customer.name, customer.email);
+          
+          document.getElementById('customer-login-form').classList.add('hidden');
+          document.getElementById('customer-dashboard').classList.remove('hidden');
+          
+          const initials = loggedInCustomer.name.split(' ').map(n => n[0]).join('').toUpperCase();
+          document.getElementById('customer-avatar').textContent = initials;
+          document.getElementById('customer-name').textContent = loggedInCustomer.name;
+          document.getElementById('customer-email').textContent = loggedInCustomer.email;
+          
+          renderCustomerAppointments();
+          updateCustomerStats();
+          
+          showToast('Login successful!', 'success');
+          
+          // Reset OTP form
+          resetCustomerOTPForm();
+        }
+      } else {
+        showToast('Invalid OTP. Please try again.', 'error');
+        document.querySelectorAll('.customer-otp-digit').forEach(input => input.value = '');
+        document.querySelectorAll('.customer-otp-digit')[0].focus();
+      }
+    });
+
+    function resendCustomerOTP() {
+      customerOTP = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('customer-demo-otp').textContent = customerOTP;
+      showToast('New OTP sent!', 'success');
+    }
+
+    function backToCustomerLogin() {
+      document.getElementById('customer-login-method').classList.remove('hidden');
+      document.getElementById('customer-verify-otp').classList.add('hidden');
+      resetCustomerOTPForm();
+    }
+
+    function resetCustomerOTPForm() {
+      document.querySelectorAll('.customer-otp-digit').forEach(input => input.value = '');
+      customerOTP = '';
+      customerLoginIdentifier = '';
+    }
+
+    function loginCustomer(email) {
+      // Check if customer exists in registered customers
+      const customer = customers.find(c => c.email.toLowerCase() === email);
+      
+      if (!customer) {
+        showToast('No account found with this email. Please register first.', 'error');
+        return;
+      }
+
+      // Check if they have any appointments
+      const customerAppointments = appointments.filter(apt => apt.patient_email.toLowerCase() === email);
+
+      loggedInCustomer = {
+        email: customer.email,
+        name: customer.name,
+        phone: customer.phone
+      };
+      
+      // Track login
+      trackLogin('customer', customer.name, customer.email);
+      
+      document.getElementById('customer-login-form').classList.add('hidden');
+      document.getElementById('customer-dashboard').classList.remove('hidden');
+      
+      const initials = loggedInCustomer.name.split(' ').map(n => n[0]).join('').toUpperCase();
+      document.getElementById('customer-avatar').textContent = initials;
+      document.getElementById('customer-name').textContent = loggedInCustomer.name;
+      document.getElementById('customer-email').textContent = loggedInCustomer.email;
+      
+      renderCustomerAppointments();
+      updateCustomerStats();
+    }
+
+    function logoutCustomer() {
+      loggedInCustomer = null;
+      document.getElementById('customer-login-form').classList.remove('hidden');
+      document.getElementById('customer-dashboard').classList.add('hidden');
+      document.getElementById('customer-email-input').value = '';
+      customerAppointmentFilter = 'all';
+    }
+
+    function filterCustomerAppointments(filter) {
+      customerAppointmentFilter = filter;
+      document.querySelectorAll('.customer-filter-btn').forEach(btn => {
+        const isActive = btn.dataset.filter === filter;
+        btn.classList.toggle('bg-emerald-500', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-slate-700', !isActive);
+        btn.classList.toggle('text-slate-300', !isActive);
+      });
+      renderCustomerAppointments();
+    }
+
+    function renderCustomerAppointments() {
+      if (!loggedInCustomer) return;
+
+      const container = document.getElementById('customer-appointments');
+      
+      let filtered = appointments.filter(apt => apt.patient_email.toLowerCase() === loggedInCustomer.email.toLowerCase());
+      
+      if (customerAppointmentFilter !== 'all') {
+        filtered = filtered.filter(apt => apt.status === customerAppointmentFilter);
+      }
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">No appointments found.</p>';
+        return;
+      }
+
+      const sorted = filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      container.innerHTML = sorted.map(apt => {
+        const dateObj = new Date(apt.date);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        const doctor = doctors.find(d => d.id === apt.doctor_id) || { avatar: '👨‍⚕️' };
+        const hospital = hospitals.find(h => h.id === apt.hospital_id);
+        
+        const statusClass = apt.status === 'accepted' ? 'status-accepted' : apt.status === 'declined' ? 'status-declined' : 'status-pending';
+        const statusText = apt.status.charAt(0).toUpperCase() + apt.status.slice(1);
+
+        return `
+          <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="token-badge text-white text-lg font-bold w-14 h-14 rounded-xl flex items-center justify-center">#${apt.token_number}</div>
+                <div class="flex items-center gap-2">
+                  <span class="text-3xl">${doctor.avatar}</span>
+                  <div>
+                    <p class="font-semibold text-slate-800">${apt.doctor_name}</p>
+                    <p class="text-sm text-emerald-600">${apt.specialty}</p>
+                    ${hospital ? `<p class="text-xs text-slate-600 flex items-center gap-1 mt-1"><span>${hospital.icon}</span><span>${apt.hospital_name}</span></p>` : ''}
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex-1 min-w-[200px]">
+                <div class="flex items-center gap-4 text-sm text-slate-600 mb-2">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    ${formattedDate}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-slate-600">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>${apt.time_slot}</span>
+                  <span class="ml-2 font-semibold text-emerald-600">₹${apt.consultation_fee}</span>
+                </div>
+              </div>
+
+              <div class="flex items-center">
+                <span class="${statusClass} text-white text-sm px-4 py-2 rounded-lg font-medium">${statusText}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateCustomerStats() {
+      if (!loggedInCustomer) return;
+
+      const myAppointments = appointments.filter(apt => apt.patient_email.toLowerCase() === loggedInCustomer.email.toLowerCase());
+      const pending = myAppointments.filter(a => a.status === 'pending').length;
+      
+      const today = new Date();
+      const upcoming = myAppointments.filter(a => {
+        const aptDate = new Date(a.date);
+        return aptDate >= today && a.status === 'accepted';
+      }).length;
+
+      document.getElementById('customer-stat-total').textContent = myAppointments.length;
+      document.getElementById('customer-stat-pending').textContent = pending;
+      document.getElementById('customer-stat-upcoming').textContent = upcoming;
+    }
+
+    // Auto-populate sample data on first load
+    async function autoPopulateSampleData() {
+      if (!window.dataSdk) return;
+      
+      // Check if we already have data
+      if (appointments.length > 0) return;
+      
+      // Sample patient data (80 unique patients)
+      const samplePatients = [
+        { name: 'Rajesh Kumar', email: 'rajesh.kumar@email.com', phone: '+91 98765 43210' },
+        { name: 'Priya Sharma', email: 'priya.sharma@email.com', phone: '+91 98765 43211' },
+        { name: 'Amit Patel', email: 'amit.patel@email.com', phone: '+91 98765 43212' },
+        { name: 'Sneha Reddy', email: 'sneha.reddy@email.com', phone: '+91 98765 43213' },
+        { name: 'Vikram Singh', email: 'vikram.singh@email.com', phone: '+91 98765 43214' },
+        { name: 'Ananya Nair', email: 'ananya.nair@email.com', phone: '+91 98765 43215' },
+        { name: 'Arjun Gupta', email: 'arjun.gupta@email.com', phone: '+91 98765 43216' },
+        { name: 'Deepika Iyer', email: 'deepika.iyer@email.com', phone: '+91 98765 43217' },
+        { name: 'Karan Malhotra', email: 'karan.malhotra@email.com', phone: '+91 98765 43218' },
+        { name: 'Nisha Verma', email: 'nisha.verma@email.com', phone: '+91 98765 43219' },
+        { name: 'Rohit Desai', email: 'rohit.desai@email.com', phone: '+91 98765 43220' },
+        { name: 'Kavya Rao', email: 'kavya.rao@email.com', phone: '+91 98765 43221' },
+        { name: 'Siddharth Joshi', email: 'siddharth.joshi@email.com', phone: '+91 98765 43222' },
+        { name: 'Meera Kulkarni', email: 'meera.kulkarni@email.com', phone: '+91 98765 43223' },
+        { name: 'Aditya Kapoor', email: 'aditya.kapoor@email.com', phone: '+91 98765 43224' },
+        { name: 'Pooja Mehta', email: 'pooja.mehta@email.com', phone: '+91 98765 43225' },
+        { name: 'Nikhil Bansal', email: 'nikhil.bansal@email.com', phone: '+91 98765 43226' },
+        { name: 'Riya Chawla', email: 'riya.chawla@email.com', phone: '+91 98765 43227' },
+        { name: 'Varun Agarwal', email: 'varun.agarwal@email.com', phone: '+91 98765 43228' },
+        { name: 'Ishita Saxena', email: 'ishita.saxena@email.com', phone: '+91 98765 43229' },
+        { name: 'Rahul Bhat', email: 'rahul.bhat@email.com', phone: '+91 98765 43230' },
+        { name: 'Tanvi Mishra', email: 'tanvi.mishra@email.com', phone: '+91 98765 43231' },
+        { name: 'Kunal Jain', email: 'kunal.jain@email.com', phone: '+91 98765 43232' },
+        { name: 'Simran Kaur', email: 'simran.kaur@email.com', phone: '+91 98765 43233' },
+        { name: 'Manish Yadav', email: 'manish.yadav@email.com', phone: '+91 98765 43234' },
+        { name: 'Anjali Pillai', email: 'anjali.pillai@email.com', phone: '+91 98765 43235' },
+        { name: 'Rohan Das', email: 'rohan.das@email.com', phone: '+91 98765 43236' },
+        { name: 'Shruti Menon', email: 'shruti.menon@email.com', phone: '+91 98765 43237' },
+        { name: 'Akash Trivedi', email: 'akash.trivedi@email.com', phone: '+91 98765 43238' },
+        { name: 'Divya Chopra', email: 'divya.chopra@email.com', phone: '+91 98765 43239' },
+        { name: 'Sanjay Thakur', email: 'sanjay.thakur@email.com', phone: '+91 98765 43240' },
+        { name: 'Neha Sinha', email: 'neha.sinha@email.com', phone: '+91 98765 43241' },
+        { name: 'Vishal Pandey', email: 'vishal.pandey@email.com', phone: '+91 98765 43242' },
+        { name: 'Sakshi Bhatt', email: 'sakshi.bhatt@email.com', phone: '+91 98765 43243' },
+        { name: 'Gaurav Sethi', email: 'gaurav.sethi@email.com', phone: '+91 98765 43244' },
+        { name: 'Aarti Dubey', email: 'aarti.dubey@email.com', phone: '+91 98765 43245' },
+        { name: 'Harsh Goyal', email: 'harsh.goyal@email.com', phone: '+91 98765 43246' },
+        { name: 'Priyanka Tiwari', email: 'priyanka.tiwari@email.com', phone: '+91 98765 43247' },
+        { name: 'Aryan Rathore', email: 'aryan.rathore@email.com', phone: '+91 98765 43248' },
+        { name: 'Swati Bhardwaj', email: 'swati.bhardwaj@email.com', phone: '+91 98765 43249' },
+        { name: 'Mohit Joshi', email: 'mohit.joshi@email.com', phone: '+91 98765 43250' },
+        { name: 'Kritika Bose', email: 'kritika.bose@email.com', phone: '+91 98765 43251' },
+        { name: 'Raghav Shukla', email: 'raghav.shukla@email.com', phone: '+91 98765 43252' },
+        { name: 'Pallavi Deshmukh', email: 'pallavi.deshmukh@email.com', phone: '+91 98765 43253' },
+        { name: 'Ayush Ranjan', email: 'ayush.ranjan@email.com', phone: '+91 98765 43254' },
+        { name: 'Tanya Khanna', email: 'tanya.khanna@email.com', phone: '+91 98765 43255' },
+        { name: 'Saurabh Chauhan', email: 'saurabh.chauhan@email.com', phone: '+91 98765 43256' },
+        { name: 'Megha Prakash', email: 'megha.prakash@email.com', phone: '+91 98765 43257' },
+        { name: 'Kartik Dutta', email: 'kartik.dutta@email.com', phone: '+91 98765 43258' },
+        { name: 'Shreya Mathur', email: 'shreya.mathur@email.com', phone: '+91 98765 43259' },
+        { name: 'Abhishek Gill', email: 'abhishek.gill@email.com', phone: '+91 98765 43260' },
+        { name: 'Ritika Sood', email: 'ritika.sood@email.com', phone: '+91 98765 43261' },
+        { name: 'Yash Narang', email: 'yash.narang@email.com', phone: '+91 98765 43262' },
+        { name: 'Nikita Bajaj', email: 'nikita.bajaj@email.com', phone: '+91 98765 43263' },
+        { name: 'Pranav Kohli', email: 'pranav.kohli@email.com', phone: '+91 98765 43264' },
+        { name: 'Nidhi Srivastava', email: 'nidhi.srivastava@email.com', phone: '+91 98765 43265' },
+        { name: 'Ashwin Nambiar', email: 'ashwin.nambiar@email.com', phone: '+91 98765 43266' },
+        { name: 'Isha Anand', email: 'isha.anand@email.com', phone: '+91 98765 43267' },
+        { name: 'Dev Puri', email: 'dev.puri@email.com', phone: '+91 98765 43268' },
+        { name: 'Aditi Tandon', email: 'aditi.tandon@email.com', phone: '+91 98765 43269' },
+        { name: 'Sahil Dhawan', email: 'sahil.dhawan@email.com', phone: '+91 98765 43270' },
+        { name: 'Natasha Bakshi', email: 'natasha.bakshi@email.com', phone: '+91 98765 43271' },
+        { name: 'Rishab Vohra', email: 'rishab.vohra@email.com', phone: '+91 98765 43272' },
+        { name: 'Alisha Suri', email: 'alisha.suri@email.com', phone: '+91 98765 43273' },
+        { name: 'Pranay Ahuja', email: 'pranay.ahuja@email.com', phone: '+91 98765 43274' },
+        { name: 'Kriti Saluja', email: 'kriti.saluja@email.com', phone: '+91 98765 43275' },
+        { name: 'Sameer Bhandari', email: 'sameer.bhandari@email.com', phone: '+91 98765 43276' },
+        { name: 'Radhika Seth', email: 'radhika.seth@email.com', phone: '+91 98765 43277' },
+        { name: 'Aakash Vyas', email: 'aakash.vyas@email.com', phone: '+91 98765 43278' },
+        { name: 'Shweta Grover', email: 'shweta.grover@email.com', phone: '+91 98765 43279' },
+        { name: 'Tarun Saini', email: 'tarun.saini@email.com', phone: '+91 98765 43280' },
+        { name: 'Vaishnavi Solanki', email: 'vaishnavi.solanki@email.com', phone: '+91 98765 43281' },
+        { name: 'Advait Jha', email: 'advait.jha@email.com', phone: '+91 98765 43282' },
+        { name: 'Lavanya Reddy', email: 'lavanya.reddy@email.com', phone: '+91 98765 43283' },
+        { name: 'Kabir Singhal', email: 'kabir.singhal@email.com', phone: '+91 98765 43284' },
+        { name: 'Anushka Bhalla', email: 'anushka.bhalla@email.com', phone: '+91 98765 43285' },
+        { name: 'Chirag Modi', email: 'chirag.modi@email.com', phone: '+91 98765 43286' },
+        { name: 'Diya Arora', email: 'diya.arora@email.com', phone: '+91 98765 43287' },
+        { name: 'Eshan Rane', email: 'eshan.rane@email.com', phone: '+91 98765 43288' },
+        { name: 'Farida Khan', email: 'farida.khan@email.com', phone: '+91 98765 43289' },
+        { name: 'Girish Naik', email: 'girish.naik@email.com', phone: '+91 98765 43290' },
+        { name: 'Hema Varma', email: 'hema.varma@email.com', phone: '+91 98765 43291' },
+        { name: 'Imran Sheikh', email: 'imran.sheikh@email.com', phone: '+91 98765 43292' },
+        { name: 'Jyoti Deshmukh', email: 'jyoti.deshmukh@email.com', phone: '+91 98765 43293' },
+        { name: 'Karthik Reddy', email: 'karthik.reddy@email.com', phone: '+91 98765 43294' },
+        { name: 'Leela Krishnan', email: 'leela.krishnan@email.com', phone: '+91 98765 43295' },
+        { name: 'Mahesh Gupta', email: 'mahesh.gupta@email.com', phone: '+91 98765 43296' },
+        { name: 'Nalini Iyer', email: 'nalini.iyer@email.com', phone: '+91 98765 43297' },
+        { name: 'Omkar Joshi', email: 'omkar.joshi@email.com', phone: '+91 98765 43298' },
+        { name: 'Parvati Nair', email: 'parvati.nair@email.com', phone: '+91 98765 43299' },
+        { name: 'Qasim Ali', email: 'qasim.ali@email.com', phone: '+91 98765 43300' },
+        { name: 'Ramya Menon', email: 'ramya.menon@email.com', phone: '+91 98765 43301' },
+        { name: 'Shantanu Roy', email: 'shantanu.roy@email.com', phone: '+91 98765 43302' },
+        { name: 'Tanuja Pillai', email: 'tanuja.pillai@email.com', phone: '+91 98765 43303' },
+        { name: 'Uday Sharma', email: 'uday.sharma@email.com', phone: '+91 98765 43304' },
+        { name: 'Vinaya Kumar', email: 'vinaya.kumar@email.com', phone: '+91 98765 43305' },
+        { name: 'Wasim Khan', email: 'wasim.khan@email.com', phone: '+91 98765 43306' },
+        { name: 'Xavier Fernandes', email: 'xavier.fernandes@email.com', phone: '+91 98765 43307' },
+        { name: 'Yamini Rao', email: 'yamini.rao@email.com', phone: '+91 98765 43308' },
+        { name: 'Zara Ahmed', email: 'zara.ahmed@email.com', phone: '+91 98765 43309' },
+        { name: 'Arvind Patel', email: 'arvind.patel@email.com', phone: '+91 98765 43310' },
+        { name: 'Bhavna Desai', email: 'bhavna.desai@email.com', phone: '+91 98765 43311' },
+        { name: 'Chandan Singh', email: 'chandan.singh@email.com', phone: '+91 98765 43312' },
+        { name: 'Deepa Malhotra', email: 'deepa.malhotra@email.com', phone: '+91 98765 43313' },
+        { name: 'Esha Kapoor', email: 'esha.kapoor@email.com', phone: '+91 98765 43314' },
+        { name: 'Faisal Siddiqui', email: 'faisal.siddiqui@email.com', phone: '+91 98765 43315' },
+        { name: 'Gita Nambiar', email: 'gita.nambiar@email.com', phone: '+91 98765 43316' },
+        { name: 'Hassan Rizvi', email: 'hassan.rizvi@email.com', phone: '+91 98765 43317' },
+        { name: 'Indira Bose', email: 'indira.bose@email.com', phone: '+91 98765 43318' },
+        { name: 'Jaideep Saxena', email: 'jaideep.saxena@email.com', phone: '+91 98765 43319' },
+        { name: 'Kalyani Reddy', email: 'kalyani.reddy@email.com', phone: '+91 98765 43320' },
+        { name: 'Lalit Mehta', email: 'lalit.mehta@email.com', phone: '+91 98765 43321' },
+        { name: 'Manasa Kumar', email: 'manasa.kumar@email.com', phone: '+91 98765 43322' },
+        { name: 'Naveen Choudhary', email: 'naveen.choudhary@email.com', phone: '+91 98765 43323' },
+        { name: 'Oviya Iyer', email: 'oviya.iyer@email.com', phone: '+91 98765 43324' },
+        { name: 'Preeti Bhatt', email: 'preeti.bhatt@email.com', phone: '+91 98765 43325' },
+        { name: 'Qadir Abbas', email: 'qadir.abbas@email.com', phone: '+91 98765 43326' },
+        { name: 'Rashmi Kulkarni', email: 'rashmi.kulkarni@email.com', phone: '+91 98765 43327' },
+        { name: 'Sunil Varma', email: 'sunil.varma@email.com', phone: '+91 98765 43328' },
+        { name: 'Tara Menon', email: 'tara.menon@email.com', phone: '+91 98765 43329' },
+        { name: 'Umesh Agarwal', email: 'umesh.agarwal@email.com', phone: '+91 98765 43330' },
+        { name: 'Vidya Shankar', email: 'vidya.shankar@email.com', phone: '+91 98765 43331' },
+        { name: 'Yusuf Rahman', email: 'yusuf.rahman@email.com', phone: '+91 98765 43332' },
+        { name: 'Zainab Hussain', email: 'zainab.hussain@email.com', phone: '+91 98765 43333' },
+        { name: 'Ankit Sinha', email: 'ankit.sinha@email.com', phone: '+91 98765 43334' },
+        { name: 'Bhawna Kaur', email: 'bhawna.kaur@email.com', phone: '+91 98765 43335' },
+        { name: 'Chetan Pandey', email: 'chetan.pandey@email.com', phone: '+91 98765 43336' },
+        { name: 'Dimple Chawla', email: 'dimple.chawla@email.com', phone: '+91 98765 43337' },
+        { name: 'Ekta Goel', email: 'ekta.goel@email.com', phone: '+91 98765 43338' },
+        { name: 'Firoz Ansari', email: 'firoz.ansari@email.com', phone: '+91 98765 43339' },
+        { name: 'Gaurangi Desai', email: 'gaurangi.desai@email.com', phone: '+91 98765 43340' },
+        { name: 'Hitesh Jain', email: 'hitesh.jain@email.com', phone: '+91 98765 43341' },
+        { name: 'Ila Banerjee', email: 'ila.banerjee@email.com', phone: '+91 98765 43342' },
+        { name: 'Jugal Pathak', email: 'jugal.pathak@email.com', phone: '+91 98765 43343' },
+        { name: 'Kirti Oberoi', email: 'kirti.oberoi@email.com', phone: '+91 98765 43344' },
+        { name: 'Lokesh Raina', email: 'lokesh.raina@email.com', phone: '+91 98765 43345' },
+        { name: 'Minal Shah', email: 'minal.shah@email.com', phone: '+91 98765 43346' },
+        { name: 'Nirmal Thapa', email: 'nirmal.thapa@email.com', phone: '+91 98765 43347' },
+        { name: 'Ojas Dixit', email: 'ojas.dixit@email.com', phone: '+91 98765 43348' },
+        { name: 'Puja Misra', email: 'puja.misra@email.com', phone: '+91 98765 43349' },
+        { name: 'Qamar Hasan', email: 'qamar.hasan@email.com', phone: '+91 98765 43350' },
+        { name: 'Ritu Ahluwalia', email: 'ritu.ahluwalia@email.com', phone: '+91 98765 43351' },
+        { name: 'Sachin Negi', email: 'sachin.negi@email.com', phone: '+91 98765 43352' },
+        { name: 'Tulika Bansal', email: 'tulika.bansal@email.com', phone: '+91 98765 43353' },
+        { name: 'Urvashi Kapoor', email: 'urvashi.kapoor@email.com', phone: '+91 98765 43354' },
+        { name: 'Vaibhav Rana', email: 'vaibhav.rana@email.com', phone: '+91 98765 43355' },
+        { name: 'Waqar Ali', email: 'waqar.ali@email.com', phone: '+91 98765 43356' },
+        { name: 'Yashika Sood', email: 'yashika.sood@email.com', phone: '+91 98765 43357' },
+        { name: 'Zahir Khan', email: 'zahir.khan@email.com', phone: '+91 98765 43358' },
+        { name: 'Anil Chopra', email: 'anil.chopra@email.com', phone: '+91 98765 43359' },
+        { name: 'Bindu Menon', email: 'bindu.menon@email.com', phone: '+91 98765 43360' },
+        { name: 'Chandran Nair', email: 'chandran.nair@email.com', phone: '+91 98765 43361' },
+        { name: 'Divya Krishnan', email: 'divya.krishnan@email.com', phone: '+91 98765 43362' },
+        { name: 'Eswar Reddy', email: 'eswar.reddy@email.com', phone: '+91 98765 43363' },
+        { name: 'Fatima Begum', email: 'fatima.begum@email.com', phone: '+91 98765 43364' },
+        { name: 'Ganesh Iyer', email: 'ganesh.iyer@email.com', phone: '+91 98765 43365' },
+        { name: 'Harini Rao', email: 'harini.rao@email.com', phone: '+91 98765 43366' },
+        { name: 'Ibrahim Malik', email: 'ibrahim.malik@email.com', phone: '+91 98765 43367' },
+        { name: 'Janaki Pillai', email: 'janaki.pillai@email.com', phone: '+91 98765 43368' },
+        { name: 'Karthikeyan Kumar', email: 'karthikeyan.kumar@email.com', phone: '+91 98765 43369' },
+        { name: 'Lakshmi Menon', email: 'lakshmi.menon@email.com', phone: '+91 98765 43370' },
+        { name: 'Madhavan Nair', email: 'madhavan.nair@email.com', phone: '+91 98765 43371' },
+        { name: 'Nirmala Reddy', email: 'nirmala.reddy@email.com', phone: '+91 98765 43372' },
+        { name: 'Omar Farooq', email: 'omar.farooq@email.com', phone: '+91 98765 43373' },
+        { name: 'Preethi Iyer', email: 'preethi.iyer@email.com', phone: '+91 98765 43374' },
+        { name: 'Qadir Hussain', email: 'qadir.hussain@email.com', phone: '+91 98765 43375' },
+        { name: 'Rajeswari Rao', email: 'rajeswari.rao@email.com', phone: '+91 98765 43376' },
+        { name: 'Sathish Kumar', email: 'sathish.kumar@email.com', phone: '+91 98765 43377' },
+        { name: 'Thara Menon', email: 'thara.menon@email.com', phone: '+91 98765 43378' },
+        { name: 'Usha Nair', email: 'usha.nair@email.com', phone: '+91 98765 43379' },
+        { name: 'Vijay Reddy', email: 'vijay.reddy@email.com', phone: '+91 98765 43380' },
+        { name: 'Waheed Ahmed', email: 'waheed.ahmed@email.com', phone: '+91 98765 43381' },
+        { name: 'Yamuna Iyer', email: 'yamuna.iyer@email.com', phone: '+91 98765 43382' },
+        { name: 'Zareen Fatima', email: 'zareen.fatima@email.com', phone: '+91 98765 43383' },
+        { name: 'Ashwin Pillai', email: 'ashwin.pillai@email.com', phone: '+91 98765 43384' },
+        { name: 'Bhavani Kumar', email: 'bhavani.kumar@email.com', phone: '+91 98765 43385' },
+        { name: 'Chinmay Nair', email: 'chinmay.nair@email.com', phone: '+91 98765 43386' },
+        { name: 'Dhanya Menon', email: 'dhanya.menon@email.com', phone: '+91 98765 43387' },
+        { name: 'Easwaran Reddy', email: 'easwaran.reddy@email.com', phone: '+91 98765 43388' },
+        { name: 'Fathima Rizvi', email: 'fathima.rizvi@email.com', phone: '+91 98765 43389' },
+        { name: 'Gowri Iyer', email: 'gowri.iyer@email.com', phone: '+91 98765 43390' },
+        { name: 'Hari Kumar', email: 'hari.kumar@email.com', phone: '+91 98765 43391' },
+        { name: 'Indira Rao', email: 'indira.rao@email.com', phone: '+91 98765 43392' },
+        { name: 'Jaleel Abbas', email: 'jaleel.abbas@email.com', phone: '+91 98765 43393' },
+        { name: 'Kaveri Pillai', email: 'kaveri.pillai@email.com', phone: '+91 98765 43394' },
+        { name: 'Lokesh Menon', email: 'lokesh.menon@email.com', phone: '+91 98765 43395' },
+        { name: 'Meenakshi Nair', email: 'meenakshi.nair@email.com', phone: '+91 98765 43396' },
+        { name: 'Naveen Reddy', email: 'naveen.reddy@email.com', phone: '+91 98765 43397' },
+        { name: 'Oviya Iyer', email: 'oviya.p.iyer@email.com', phone: '+91 98765 43398' }
+      ];
+
+      // Generate dates for past 7 days and next 7 days
+      const generateDates = () => {
+        const dates = [];
+        const today = new Date();
+        for (let i = -7; i <= 7; i++) {
+          const date = new Date(today);
+          date.setDate(today.getDate() + i);
+          dates.push(date.toISOString().split('T')[0]);
+        }
+        return dates;
+      };
+
+      const availableDates = generateDates();
+      const statuses = ['pending', 'accepted', 'declined', 'accepted', 'accepted']; // More accepted for realism
+      
+      // Use first 200 doctors from the dataset
+      const selectedDoctors = doctors.slice(0, 200);
+
+      // Create 240 appointments
+      for (let i = 0; i < 240; i++) {
+        const patient = samplePatients[i % samplePatients.length];
+        const doctor = selectedDoctors[i % selectedDoctors.length];
+        const hospital = hospitals.find(h => h.id === doctor.hospitalId);
+        const randomDate = availableDates[Math.floor(Math.random() * availableDates.length)];
+        const randomTime = doctor.available[Math.floor(Math.random() * doctor.available.length)];
+        const tokenNumber = 1000 + i;
+        const status = statuses[Math.floor(Math.random() * statuses.length)];
+        
+        const appointment = {
+          record_type: 'appointment',
+          id: `sample_${Date.now()}_${i}`,
+          patient_name: patient.name,
+          patient_email: patient.email,
+          patient_phone: patient.phone,
+          doctor_id: doctor.id,
+          doctor_name: doctor.name,
+          specialty: doctor.specialty,
+          hospital_id: hospital.id,
+          hospital_name: hospital.name,
+          date: randomDate,
+          time_slot: randomTime,
+          token_number: tokenNumber,
+          consultation_fee: doctor.fee,
+          status: status,
+          created_at: new Date(Date.now() - (199 - i) * 3600000).toISOString() // Spread over last 199 hours
+        };
+
+        await window.dataSdk.create(appointment);
+        
+        // Small delay to avoid overwhelming the system
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      console.log('Sample data populated: 240 appointments created');
+    }
+
+    // Initialize
+    async function initializeApp() {
+      await init();
+      
+      // Auto-populate sample data after SDK initialization
+      setTimeout(async () => {
+        await autoPopulateSampleData();
+      }, 1000);
+    }
+    
+    initializeApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5eca9f10359ac8',t:'MTc2OTc1MzI3NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
